@@ -1,0 +1,14 @@
+[package]
+name = "fc"
+version = "0.1.0"
+authors = ["james7132 <contact@jamessliu.com>"]
+edition = "2018"
+
+[dependencies]
+fc-core = { path = "../core" }
+
+[dependencies.bevy]
+git = "https://github.com/bevyengine/bevy"
+branch = "main"
+default-features = false
+features = [ "bevy_winit" ]

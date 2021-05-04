@@ -698,14 +698,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f7531096570974c3a9dcf9e4b8e1cede1ec26cf5046219fb3b9d897503b9be59"
 
 [[package]]
-name = "fantasy-crescendo-bevy"
-version = "0.1.0"
-dependencies = [
- "bevy",
- "bitflags",
-]
-
-[[package]]
 name = "fastrand"
 version = "1.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -713,6 +705,25 @@ checksum = "77b705829d1e87f762c2df6da140b26af5839e1033aa84aa5f56bb688e4e1bdb"
 dependencies = [
  "instant",
 ]
+
+[[package]]
+name = "fc"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "fc-core",
+]
+
+[[package]]
+name = "fc-core"
+version = "0.1.0"
+dependencies = [
+ "bitflags",
+]
+
+[[package]]
+name = "fc-editor"
+version = "0.1.0"
 
 [[package]]
 name = "filetime"

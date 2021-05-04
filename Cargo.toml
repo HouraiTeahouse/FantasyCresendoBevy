@@ -1,19 +1,11 @@
-[package]
-name = "fantasy-crescendo-bevy"
-version = "0.1.0"
-authors = ["james7132 <contact@jamessliu.com>"]
-edition = "2018"
+[workspace]
+members = [
+  "core",
+  "editor",
+  "game"
+]
 
 [profile.release]
 lto = true
 opt-level = 3
 panic = "abort"
-
-[dependencies]
-bitflags = "1.2"
-
-[dependencies.bevy]
-git = "https://github.com/bevyengine/bevy"
-branch = "main"
-default-features = false
-features = [ "bevy_winit" ]
