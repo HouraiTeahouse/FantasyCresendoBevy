@@ -1,26 +1,22 @@
-#[macro_use]
-extern crate bitflags;
-
-mod input;
-
 use bevy::prelude::*;
+use fc_core::input::*;
 
 struct Player;
 
 fn create_players(mut commands: Commands) {
     commands.spawn()
         .insert(Player)
-        .insert(input::PlayerInput::default());
+        .insert(PlayerInput::default());
 }
 
 trait InputSource {
-    fn update_input(&self, frame: &mut input::PlayerInputFrame);
+    fn update_input(&self, frame: &mut PlayerInputFrame);
 }
 
 impl<'w> InputSource for Res<'w, Input<KeyCode>> {
-    fn update_input(&self, frame: &mut input::PlayerInputFrame) {
-        fn keyboard_axis(keyboard: &Res<Input<KeyCode>>, pos: KeyCode, neg: KeyCode) -> input::Axis1D {
-            input::Axis1D(match (keyboard.pressed(pos), keyboard.pressed(neg)) {
+    fn update_input(&self, frame: &mut PlayerInputFrame) {
+        fn keyboard_axis(keyboard: &Res<Input<KeyCode>>, pos: KeyCode, neg: KeyCode) -> Axis1D {
+            Axis1D(match (keyboard.pressed(pos), keyboard.pressed(neg)) {
                 (true, true) => 0_i8,
                 (true, false) => i8::MAX,
                 (false, true) => i8::MIN,
@@ -38,7 +34,7 @@ impl<'w> InputSource for Res<'w, Input<KeyCode>> {
             self.pressed(KeyCode::I)
         );
 
-        frame.movement = input::Axis2D {
+        frame.movement = Axis2D {
             x: keyboard_axis(self, KeyCode::H, KeyCode::L),
             y: keyboard_axis(self, KeyCode::I, KeyCode::K),
         };
@@ -47,7 +43,7 @@ impl<'w> InputSource for Res<'w, Input<KeyCode>> {
 
 fn sample_input(
     input: Res<Input<KeyCode>>,
-    mut query: Query<&mut input::PlayerInput, With<Player>>) {
+    mut query: Query<&mut PlayerInput, With<Player>>) {
     for mut player_input in query.iter_mut() {
         player_input.tick();
         input.update_input(&mut player_input.current);
