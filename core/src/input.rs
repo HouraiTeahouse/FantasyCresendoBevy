@@ -1,7 +1,8 @@
 use std::fmt;
+use serde::{Serialize, Deserialize};
 
 bitflags! {
-    #[derive(Default)]
+    #[derive(Default, Serialize, Deserialize)]
     pub struct Buttons: u8 {
         const ATTACK = 1 << 0;
         const SPECIAL = 1 << 1;
