@@ -1,14 +1,16 @@
-use serde::{Serialize, Deserialize};
 use super::transition::StateTransition;
+use crate::character::frame_data::StateFrameData;
+use serde::{Deserialize, Serialize};
 
 pub type StateId = usize;
 
-#[derive(Default, Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct State {
     /// A debug name for the state.
-    pub name: String, 
+    pub name: String,
     /// Outgoing transitions originating from this state. There can be multiple transitions.
-    pub transitions: Vec<StateTransition>
+    pub transitions: Vec<StateTransition>,
+    pub frame_data: StateFrameData,
 }
 
 impl State {
@@ -19,6 +21,7 @@ impl State {
     }
 
     pub(crate) fn remove_transitions_to(&mut self, state: StateId) {
-        self.transitions.retain(|transition| transition.target_state != state);
+        self.transitions
+            .retain(|transition| transition.target_state != state);
     }
 }

@@ -1,24 +1,45 @@
 mod state;
 mod transition;
 
-use serde::{Serialize, Deserialize};
+use crate::character::frame_data::CharacterFrame;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+
 pub use self::state::*;
 pub use self::transition::*;
+
+pub struct PlayerState {
+    pub state_id: StateId,
+    pub frame: usize,
+}
+
+impl PlayerState {
+    pub fn tick(&mut self) {
+        self.frame += 1;
+    }
+}
 
 #[derive(Default, Debug, Serialize, Deserialize)]
 pub struct StateMachine(HashMap<StateId, State>);
 
 impl StateMachine {
-    pub fn iter(&self) -> impl Iterator<Item=(&StateId, &State)> {
+    /// Samples a frame from the states in the state machine given a player's current state.
+    /// Returns None if the state does not exist or the frame number is invalid for the given
+    /// frame.
+    pub fn sample_frame(&self, player_state: &PlayerState) -> Option<&CharacterFrame> {
+        let state = self.get_state(player_state.state_id)?;
+        state.frame_data.get_frame(player_state.frame)
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = (&StateId, &State)> {
         self.0.iter()
     }
 
-    pub fn states(&self) -> impl Iterator<Item=&State> {
+    pub fn states(&self) -> impl Iterator<Item = &State> {
         self.0.values()
     }
 
-    pub fn states_mut(&mut self) -> impl Iterator<Item=&mut State> {
+    pub fn states_mut(&mut self) -> impl Iterator<Item = &mut State> {
         self.0.values_mut()
     }
 
@@ -44,7 +65,7 @@ impl StateMachine {
         self.0.contains_key(&id)
     }
 
-    /// Removes a state from the state machine. All transitions that reference the state 
+    /// Removes a state from the state machine. All transitions that reference the state
     /// in transitions will also be removed.
     pub fn remove_state(&mut self, id: StateId) {
         self.0.remove(&id);
@@ -53,35 +74,36 @@ impl StateMachine {
         }
     }
 
-    /// Creates a new transition starting from from and ending with to. 
-    /// This function returns None, if either of the two states does not correspond with a state ID 
+    /// Creates a new transition starting from from and ending with to.
+    /// This function returns None, if either of the two states does not correspond with a state ID
     /// in the current state machine.
-    pub fn create_transition(&mut self, from: StateId, to: StateId) -> Option<&mut StateTransition> {
+    pub fn create_transition(
+        &mut self,
+        from: StateId,
+        to: StateId,
+    ) -> Option<&mut StateTransition> {
         if !self.0.contains_key(&to) {
             return None;
         }
-        let transition= self.0.get_mut(&from)?.add_transition();
+        let transition = self.0.get_mut(&from)?.add_transition();
         transition.target_state = to;
         Some(transition)
     }
 }
 
 pub enum StateMachineValidationError {
-    InvalidTransitionTarget {
-        from: StateId,
-        to: StateId,
-    }
+    InvalidTransitionTarget { from: StateId, to: StateId },
 }
- 
+
 /// Validates whether a state machine has entirely correct construction.
 pub fn validate(machine: StateMachine) -> Result<(), StateMachineValidationError> {
     for (id, state) in machine.iter() {
         for transition in state.transitions.iter() {
             if !machine.contains_state(transition.target_state) {
                 return Err(StateMachineValidationError::InvalidTransitionTarget {
-                    from: *id,  
+                    from: *id,
                     to: transition.target_state,
-                })
+                });
             }
         }
     }

@@ -718,7 +718,9 @@ dependencies = [
 name = "fc-core"
 version = "0.1.0"
 dependencies = [
+ "bevy_math",
  "bitflags",
+ "glam",
  "serde",
 ]
 
@@ -848,6 +850,7 @@ version = "0.13.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "70155b56080764b8b758e91e4c63d06da0262c0c939f2cd991cd1382087147df"
 dependencies = [
+ "num-traits",
  "serde",
  "spirv-std",
 ]
