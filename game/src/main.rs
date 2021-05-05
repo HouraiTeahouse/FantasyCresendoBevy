@@ -1,59 +1,48 @@
 use bevy::prelude::*;
-use fc_core::input::*;
+use fc_core::{input::PlayerInput, input::*, player::Player};
+use std::collections::HashMap;
 
-struct Player;
+mod input;
 
 fn create_players(mut commands: Commands) {
+    let mut buttons: HashMap<Buttons, Vec<KeyCode>> = HashMap::new();
+    buttons.insert(Buttons::ATTACK, vec![KeyCode::F]);
+    buttons.insert(Buttons::SPECIAL, vec![KeyCode::D]);
+    buttons.insert(Buttons::JUMP, vec![KeyCode::I, KeyCode::A, KeyCode::S]);
+    buttons.insert(Buttons::SHIELD, vec![KeyCode::Q, KeyCode::W]);
     commands
         .spawn()
-        .insert(Player)
-        .insert(PlayerInput::default());
-}
-
-trait InputSource {
-    fn update_input(&self, frame: &mut PlayerInputFrame);
-}
-
-impl<'w> InputSource for Res<'w, Input<KeyCode>> {
-    fn update_input(&self, frame: &mut PlayerInputFrame) {
-        fn keyboard_axis(keyboard: &Res<Input<KeyCode>>, pos: KeyCode, neg: KeyCode) -> Axis1D {
-            Axis1D(match (keyboard.pressed(pos), keyboard.pressed(neg)) {
-                (true, true) => 0_i8,
-                (true, false) => i8::MAX,
-                (false, true) => i8::MIN,
-                (false, false) => 0_i8,
-            })
-        }
-
-        let buttons = &mut frame.buttons;
-        buttons.set_attack(self.pressed(KeyCode::F));
-        buttons.set_special(self.pressed(KeyCode::D));
-        buttons.set_shield(self.pressed(KeyCode::S) || self.pressed(KeyCode::A));
-        buttons.set_jump(
-            self.pressed(KeyCode::Q) || self.pressed(KeyCode::W) || self.pressed(KeyCode::I),
-        );
-
-        frame.movement = Axis2D {
-            x: keyboard_axis(self, KeyCode::H, KeyCode::L),
-            y: keyboard_axis(self, KeyCode::I, KeyCode::K),
-        };
-    }
-}
-
-fn sample_input(input: Res<Input<KeyCode>>, mut query: Query<&mut PlayerInput, With<Player>>) {
-    for mut player_input in query.iter_mut() {
-        player_input.tick();
-        input.update_input(&mut player_input.current);
-        if player_input.previous != player_input.current {
-            println!("{:?}", player_input);
-        }
-    }
+        .insert(Player { id: 0 })
+        .insert(PlayerInput::default())
+        .insert(InputSource::Keyboard {
+            movement: ButtonAxis2D::<KeyCode> {
+                horizontal: ButtonAxis1D::<KeyCode> {
+                    pos: KeyCode::I,
+                    neg: KeyCode::K,
+                },
+                vertical: ButtonAxis1D::<KeyCode> {
+                    pos: KeyCode::H,
+                    neg: KeyCode::L,
+                },
+            },
+            smash: ButtonAxis2D::<KeyCode> {
+                horizontal: ButtonAxis1D::<KeyCode> {
+                    pos: KeyCode::I,
+                    neg: KeyCode::K,
+                },
+                vertical: ButtonAxis1D::<KeyCode> {
+                    pos: KeyCode::H,
+                    neg: KeyCode::L,
+                },
+            },
+            buttons: ButtonMapping::<KeyCode>(buttons),
+        });
 }
 
 fn main() {
     App::build()
         .add_plugins(DefaultPlugins)
+        .add_plugin(input::FcInputPlugin)
         .add_startup_system(create_players.system())
-        .add_system(sample_input.system())
         .run();
 }

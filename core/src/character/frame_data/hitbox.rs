@@ -1,4 +1,4 @@
-use crate::PlayerId;
+use crate::player::PlayerId;
 use bevy_math::Vec3;
 use serde::{Deserialize, Serialize};
 

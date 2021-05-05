@@ -12,6 +12,10 @@ serde = "1.0"
 git = "https://github.com/bevyengine/bevy"
 branch = "main"
 
+[dependencies.bevy_input]
+git = "https://github.com/bevyengine/bevy"
+branch = "main"
+
 [dependencies.glam]
 version = "0.13"
 features = ["libm"]

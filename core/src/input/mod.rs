@@ -1,5 +1,7 @@
+use bevy_input::{gamepad::GamepadButton, keyboard::KeyCode, Input};
 use serde::{Deserialize, Serialize};
 use std::fmt;
+use std::{collections::HashMap, hash::Hash};
 
 bitflags! {
     #[derive(Default, Serialize, Deserialize)]
@@ -13,6 +15,14 @@ bitflags! {
 }
 
 impl Buttons {
+    pub const ALL: &'static [Self] = &[
+        Self::ATTACK,
+        Self::SPECIAL,
+        Self::JUMP,
+        Self::SHIELD,
+        Self::GRAB,
+    ];
+
     #[inline]
     pub fn attack(&self) -> bool {
         self.contains(Self::ATTACK)
@@ -64,7 +74,7 @@ impl Buttons {
     }
 
     #[inline]
-    fn set_value(&mut self, flags: Self, value: bool) {
+    pub fn set_value(&mut self, flags: Self, value: bool) {
         if value {
             self.insert(flags);
         } else {
@@ -124,5 +134,77 @@ impl PlayerInput {
 
     pub fn was_released(&self) -> Buttons {
         !self.previous.buttons & self.current.buttons
+    }
+}
+
+pub enum InputSource {
+    /// This player does not require a local input source. Their inputs may be sourced from
+    /// external sources (i.e. a replay or the network)
+    None,
+    /// The player is sourcing their inputs from the local keyboard.
+    Keyboard {
+        movement: ButtonAxis2D<KeyCode>,
+        smash: ButtonAxis2D<KeyCode>,
+        buttons: ButtonMapping<KeyCode>,
+    },
+    /// The player is sourcing their inputs from the a local gamepad.
+    Gamepad {
+        buttons: ButtonMapping<GamepadButton>,
+    },
+}
+
+pub struct ButtonAxis1D<T> {
+    pub pos: T,
+    pub neg: T,
+}
+
+impl<T: Copy + Eq + Hash> ButtonAxis1D<T> {
+    pub fn sample(&self, input: &Input<T>) -> Axis1D {
+        Axis1D(match (input.pressed(self.pos), input.pressed(self.neg)) {
+            (true, true) => 0_i8,
+            (true, false) => i8::MAX,
+            (false, true) => i8::MIN,
+            (false, false) => 0_i8,
+        })
+    }
+}
+
+pub struct ButtonAxis2D<T> {
+    pub horizontal: ButtonAxis1D<T>,
+    pub vertical: ButtonAxis1D<T>,
+}
+
+impl<T: Copy + Eq + Hash> ButtonAxis2D<T> {
+    pub fn sample(&self, input: &Input<T>) -> Axis2D {
+        Axis2D {
+            x: self.horizontal.sample(input),
+            y: self.vertical.sample(input),
+        }
+    }
+}
+
+#[derive(Default)]
+pub struct ButtonMapping<T>(pub HashMap<Buttons, Vec<T>>);
+
+impl<T: Copy + Eq + Hash> ButtonMapping<T> {
+    pub fn evaluate_all(&self, input: &Input<T>) -> Buttons {
+        let mut buttons = Buttons::empty();
+        for button in Buttons::ALL {
+            if self.evaluate(*button, input) {
+                buttons.insert(*button);
+            }
+        }
+        buttons
+    }
+
+    pub fn evaluate(&self, button: Buttons, input: &Input<T>) -> bool {
+        if let Some(buttons) = self.0.get(&button) {
+            for button in buttons.iter() {
+                if input.pressed(*button) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }
