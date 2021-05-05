@@ -49,7 +49,7 @@ fn sample_input(
             InputSource::Gamepad { buttons } => {}
         }
         if player_input.previous != player_input.current {
-            println!("{:?}", player_input);
+            info!("{:?}", player_input);
         }
     }
 }

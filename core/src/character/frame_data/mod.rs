@@ -4,6 +4,9 @@ use serde::{Deserialize, Serialize};
 pub mod hitbox;
 pub mod hurtbox;
 
+pub type HitboxActiveBitflag = u32;
+pub const CHARACTER_HITBOX_COUNT: usize = std::mem::size_of::<HitboxActiveBitflag>() * 8;
+
 bitflags! {
     #[derive(Default, Deserialize, Serialize)]
     pub struct CharacterFrameFlags : u8 {
@@ -25,7 +28,7 @@ pub struct CharacterFrame {
     pub flags: CharacterFrameFlags,
     /// Bitfield where 1s demark an active hitbox.
     /// Supports up to unique 32 hitboxes per state.
-    pub active_hitboxes: u32,
+    pub active_hitboxes: HitboxActiveBitflag,
     /// Forced character movement per frame.
     pub movement: Vec2,
     /// A flat amount of damage subtracted from all damage taken by the player during this
