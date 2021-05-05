@@ -1,5 +1,5 @@
+use serde::{Deserialize, Serialize};
 use std::fmt;
-use serde::{Serialize, Deserialize};
 
 bitflags! {
     #[derive(Default, Serialize, Deserialize)]

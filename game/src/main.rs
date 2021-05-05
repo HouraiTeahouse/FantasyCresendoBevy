@@ -4,7 +4,8 @@ use fc_core::input::*;
 struct Player;
 
 fn create_players(mut commands: Commands) {
-    commands.spawn()
+    commands
+        .spawn()
         .insert(Player)
         .insert(PlayerInput::default());
 }
@@ -29,9 +30,7 @@ impl<'w> InputSource for Res<'w, Input<KeyCode>> {
         buttons.set_special(self.pressed(KeyCode::D));
         buttons.set_shield(self.pressed(KeyCode::S) || self.pressed(KeyCode::A));
         buttons.set_jump(
-            self.pressed(KeyCode::Q) ||
-            self.pressed(KeyCode::W) ||
-            self.pressed(KeyCode::I)
+            self.pressed(KeyCode::Q) || self.pressed(KeyCode::W) || self.pressed(KeyCode::I),
         );
 
         frame.movement = Axis2D {
@@ -41,9 +40,7 @@ impl<'w> InputSource for Res<'w, Input<KeyCode>> {
     }
 }
 
-fn sample_input(
-    input: Res<Input<KeyCode>>,
-    mut query: Query<&mut PlayerInput, With<Player>>) {
+fn sample_input(input: Res<Input<KeyCode>>, mut query: Query<&mut PlayerInput, With<Player>>) {
     for mut player_input in query.iter_mut() {
         player_input.tick();
         input.update_input(&mut player_input.current);
