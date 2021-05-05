@@ -718,6 +718,7 @@ dependencies = [
 name = "fc-core"
 version = "0.1.0"
 dependencies = [
+ "bevy_input",
  "bevy_math",
  "bitflags",
  "glam",

@@ -1,4 +1,4 @@
-use crate::PlayerId;
+use crate::player::PlayerId;
 
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
