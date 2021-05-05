@@ -8,6 +8,7 @@ use std::collections::HashMap;
 pub use self::state::*;
 pub use self::transition::*;
 
+#[derive(Debug)]
 pub struct PlayerState {
     pub state_id: StateId,
     pub frame: usize,
