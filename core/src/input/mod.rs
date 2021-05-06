@@ -1,3 +1,4 @@
+use bevy_math::{Vec2, Vec3};
 use bevy_input::{gamepad::GamepadButton, keyboard::KeyCode, Input};
 use serde::{Deserialize, Serialize};
 use std::fmt;
@@ -109,6 +110,28 @@ pub struct Axis2D {
     pub x: Axis1D,
     pub y: Axis1D,
 }
+
+impl From<Axis2D> for Vec2 {
+    fn from(value: Axis2D) -> Self {
+        Vec2::new(f32::from(value.x), f32::from(value.y))
+    }
+}
+
+impl From<Axis2D> for Vec3 {
+    fn from(value: Axis2D) -> Self {
+        Vec3::from((Vec2::from(value), 0.0))
+    }
+}
+
+impl From<Vec2> for Axis2D {
+    fn from(value: Vec2) -> Self {
+        Self {
+            x: Axis1D::from(value[0]),
+            y: Axis1D::from(value[1]),
+        }
+    }
+}
+
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub struct PlayerInputFrame {
