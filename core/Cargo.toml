@@ -16,6 +16,10 @@ branch = "main"
 git = "https://github.com/bevyengine/bevy"
 branch = "main"
 
+[dependencies.bevy_reflect]
+git = "https://github.com/bevyengine/bevy"
+branch = "main"
+
 [dependencies.glam]
 version = "0.13"
 features = ["libm"]

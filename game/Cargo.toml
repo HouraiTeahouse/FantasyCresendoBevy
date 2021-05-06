@@ -11,4 +11,4 @@ fc-core = { path = "../core" }
 git = "https://github.com/bevyengine/bevy"
 branch = "main"
 default-features = false
-features = [ "bevy_winit" ]
+features = ["bevy_winit", "render", "bevy_wgpu"]
