@@ -15,6 +15,7 @@ branch = "main"
 [dependencies.bevy_input]
 git = "https://github.com/bevyengine/bevy"
 branch = "main"
+features = ["serialize"]
 
 [dependencies.bevy_reflect]
 git = "https://github.com/bevyengine/bevy"
