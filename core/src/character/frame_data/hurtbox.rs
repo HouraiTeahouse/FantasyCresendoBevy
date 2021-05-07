@@ -1,5 +1,3 @@
-use crate::player::PlayerId;
-
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum HurtboxType {
@@ -14,7 +12,7 @@ pub enum HurtboxType {
 #[derive(Clone, Copy, Debug)]
 pub struct Hurtbox {
     pub id: u8,
-    pub player: PlayerId,
+    pub player: u8,
     pub r#type: HurtboxType,
 }
 

@@ -1,5 +1,5 @@
-use bevy_math::{Vec2, Vec3};
 use bevy_input::{gamepad::GamepadButton, keyboard::KeyCode, Input};
+use bevy_math::{Vec2, Vec3};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::{collections::HashMap, hash::Hash};
@@ -132,7 +132,6 @@ impl From<Vec2> for Axis2D {
     }
 }
 
-
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub struct PlayerInputFrame {
     pub movement: Axis2D,
@@ -160,10 +159,13 @@ impl PlayerInput {
     }
 }
 
+#[derive(Debug, Clone)]
 pub enum InputSource {
     /// This player does not require a local input source. Their inputs may be sourced from
     /// external sources (i.e. a replay or the network)
     None,
+    /// Reserved for when CPU players are available.
+    CPU,
     /// The player is sourcing their inputs from the local keyboard.
     Keyboard {
         movement: ButtonAxis2D<KeyCode>,
@@ -176,6 +178,13 @@ pub enum InputSource {
     },
 }
 
+impl Default for InputSource {
+    fn default() -> Self {
+        Self::None
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ButtonAxis1D<T> {
     pub pos: T,
     pub neg: T,
@@ -192,6 +201,7 @@ impl<T: Copy + Eq + Hash> ButtonAxis1D<T> {
     }
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ButtonAxis2D<T> {
     pub horizontal: ButtonAxis1D<T>,
     pub vertical: ButtonAxis1D<T>,
@@ -206,7 +216,7 @@ impl<T: Copy + Eq + Hash> ButtonAxis2D<T> {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct ButtonMapping<T>(pub HashMap<Buttons, Vec<T>>);
 
 impl<T: Copy + Eq + Hash> ButtonMapping<T> {

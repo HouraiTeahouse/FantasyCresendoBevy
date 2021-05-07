@@ -1,5 +1,3 @@
-use crate::player::PlayerId;
-use bevy_math::Vec3;
 use serde::{Deserialize, Serialize};
 
 bitflags! {
@@ -32,12 +30,4 @@ impl ScalableValue {
     pub fn evaluate(&self, scaling: f32) -> f32 {
         self.base + scaling * self.growth
     }
-}
-
-#[derive(Clone, Debug)]
-pub struct HitboxState {
-    pub id: u8,
-    pub player: PlayerId,
-    pub enabled: bool,
-    pub previous_position: Option<Vec3>,
 }
