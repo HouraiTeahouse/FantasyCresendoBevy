@@ -21,10 +21,7 @@ pub(super) fn sample_input(
                     buttons: buttons.evaluate_all(&keyboard),
                 };
             }
-            InputSource::Gamepad { buttons } => {}
-        }
-        if player_input.previous != player_input.current {
-            info!("{:?}", player_input);
+            InputSource::Gamepad { .. } => {}
         }
     }
 }
