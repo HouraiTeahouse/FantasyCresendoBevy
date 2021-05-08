@@ -5,7 +5,10 @@ use bevy::{
     reflect::TypeUuid,
     utils::BoxedFuture,
 };
-use fc_core::{character::CharacterAsset, stage::StageAsset};
+use fc_core::{
+    character::{state::StateMachine, CharacterAsset},
+    stage::StageAsset,
+};
 
 struct FcAssetLoader<T> {
     extensions: &'static [&'static str],
@@ -106,6 +109,7 @@ impl Plugin for FcAssetsPlugin {
         builder
             .add_asset::<CharacterAsset>()
             .add_asset::<StageAsset>()
+            .add_asset::<StateMachine>()
             .add_asset_loader(FcAssetLoader::<CharacterAsset>::new(&["chr"]))
             .add_asset_loader(FcAssetLoader::<StageAsset>::new(&["stage"]))
             .add_system_set(

@@ -1,8 +1,8 @@
 #[windows_subsystem = "windows"]
 use bevy::prelude::*;
+use bevy_rapier3d::physics::RapierPhysicsPlugin;
 use fc_core::input::*;
 use std::collections::HashMap;
-use bevy_rapier3d::physics::RapierPhysicsPlugin;
 
 mod data;
 mod input;

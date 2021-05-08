@@ -135,7 +135,7 @@ fn move_players(mut query: Query<(&mut Transform, &PlayerInput)>) {
 
 fn update_camera(
     mut camera: Query<&mut Transform, With<Camera>>,
-    players: Query<&GlobalTransform, With<Player>>
+    players: Query<&GlobalTransform, With<Player>>,
 ) {
     // TODO(james7132): Make this movement more smooth
     let mut position = Vec2::ZERO;

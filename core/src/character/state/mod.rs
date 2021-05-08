@@ -2,6 +2,7 @@ mod state;
 mod transition;
 
 use crate::character::frame_data::CharacterFrame;
+use bevy_reflect::TypeUuid;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -20,7 +21,8 @@ impl PlayerState {
     }
 }
 
-#[derive(Default, Debug, Serialize, Deserialize)]
+#[derive(Default, Debug, Serialize, Deserialize, TypeUuid)]
+#[uuid = "14fed4e9-98dc-444d-9791-dcd7f561f714"]
 pub struct StateMachine(HashMap<StateId, State>);
 
 impl StateMachine {
