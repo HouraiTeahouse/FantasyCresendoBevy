@@ -347,7 +347,7 @@ version = "0.5.0"
 source = "git+https://github.com/bevyengine/bevy?branch=main#7d0e98f34c43eb62522c0c65de64f7b458b899be"
 dependencies = [
  "bevy_reflect",
- "glam 0.14.0",
+ "glam",
 ]
 
 [[package]]
@@ -376,7 +376,7 @@ dependencies = [
  "bevy_utils",
  "downcast-rs",
  "erased-serde",
- "glam 0.14.0",
+ "glam",
  "parking_lot",
  "serde",
  "smallvec",
@@ -1010,7 +1010,7 @@ dependencies = [
  "bevy_math",
  "bevy_reflect",
  "bitflags",
- "glam 0.13.1",
+ "glam",
  "serde",
 ]
 
@@ -1288,20 +1288,11 @@ dependencies = [
 
 [[package]]
 name = "glam"
-version = "0.13.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "70155b56080764b8b758e91e4c63d06da0262c0c939f2cd991cd1382087147df"
-dependencies = [
- "num-traits",
- "spirv-std",
-]
-
-[[package]]
-name = "glam"
 version = "0.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "333928d5eb103c5d4050533cec0384302db6be8ef7d3cebd30ec6a35350353da"
 dependencies = [
+ "num-traits",
  "serde",
 ]
 
@@ -1387,15 +1378,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "heck"
-version = "0.3.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "87cbf45460356b7deeb5e3415b5563308c0a9b057c85e12b06ad551f98d0a6ac"
-dependencies = [
- "unicode-segmentation",
-]
-
-[[package]]
 name = "hermit-abi"
 version = "0.1.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1416,7 +1398,7 @@ version = "3.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "975eea4013d77d7de292f50e77884fa879e0aa24197f95468681a2bd8209c344"
 dependencies = [
- "glam 0.14.0",
+ "glam",
  "lazy_static",
 ]
 
@@ -2150,37 +2132,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "spirv-std"
-version = "0.4.0-alpha.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "726c4c71ff802a9754ffae31c04c4d867aa23b49f883a56202dce285066ad792"
-dependencies = [
- "bitflags",
- "num-traits",
- "spirv-std-macros",
- "spirv-types",
-]
-
-[[package]]
-name = "spirv-std-macros"
-version = "0.4.0-alpha.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2eabd1540fccc466b5ae0b261972572fe9b8544c974610248de08a98ae4b813a"
-dependencies = [
- "heck",
- "proc-macro2",
- "quote",
- "spirv-types",
- "syn",
-]
-
-[[package]]
-name = "spirv-types"
-version = "0.4.0-alpha.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2d7f880a5540c04261e7454b5f3a342b5540283911ca9ebfec83eba9fb607ca0"
-
-[[package]]
 name = "spirv_cross"
 version = "0.23.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2387,12 +2338,6 @@ name = "ttf-parser"
 version = "0.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "85e00391c1f3d171490a3f8bd79999b0002ae38d3da0d6a3a306c754b053d71b"
-
-[[package]]
-name = "unicode-segmentation"
-version = "1.7.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bb0d2e7be6ae3a5fa87eed5fb451aff96f2573d2694942e40543ae0bbe19c796"
 
 [[package]]
 name = "unicode-width"
