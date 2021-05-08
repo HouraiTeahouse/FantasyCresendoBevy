@@ -2,6 +2,7 @@
 use bevy::prelude::*;
 use fc_core::input::*;
 use std::collections::HashMap;
+use bevy_rapier3d::physics::RapierPhysicsPlugin;
 
 mod data;
 mod input;
@@ -37,6 +38,7 @@ fn main() {
         })
         .add_state(AppState::STARTUP)
         .add_plugins(DefaultPlugins)
+        .add_plugin(RapierPhysicsPlugin)
         .add_plugin(input::FcInputPlugin)
         .add_plugin(data::FcAssetsPlugin)
         .add_plugin(r#match::FcMatchPlugin)

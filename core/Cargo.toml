@@ -7,19 +7,12 @@ edition = "2018"
 [dependencies]
 bitflags = "1.2"
 serde = "1.0"
-
-[dependencies.bevy_math]
-git = "https://github.com/bevyengine/bevy"
-branch = "main"
+bevy_math = "0.5"
+bevy_reflect = "0.5"
 
 [dependencies.bevy_input]
-git = "https://github.com/bevyengine/bevy"
-branch = "main"
+version = "0.5"
 features = ["serialize"]
-
-[dependencies.bevy_reflect]
-git = "https://github.com/bevyengine/bevy"
-branch = "main"
 
 [dependencies.glam]
 version = "0.14"

@@ -9,3 +9,9 @@ members = [
 lto = true
 opt-level = 3
 panic = "abort"
+
+[patch.crates-io]
+bevy = { git = "https://github.com/bevyengine/bevy", branch = "main" }
+bevy_input = { git = "https://github.com/bevyengine/bevy", branch = "main" }
+bevy_math = { git = "https://github.com/bevyengine/bevy", branch = "main" }
+bevy_reflect = { git = "https://github.com/bevyengine/bevy", branch = "main" }
