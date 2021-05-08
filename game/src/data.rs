@@ -1,6 +1,6 @@
 use crate::AppState;
 use bevy::{
-    asset::{AssetLoader, LoadContext, LoadedAsset},
+    asset::{AssetLoader, LoadContext, LoadState, LoadedAsset},
     prelude::*,
     reflect::TypeUuid,
     utils::BoxedFuture,
@@ -68,26 +68,24 @@ fn start_loading(mut commands: Commands, asset_server: Res<AssetServer>) {
 
 fn check_loading(
     metadata: Res<FcMetadata>,
-    characters: Res<Assets<CharacterAsset>>,
-    stages: Res<Assets<StageAsset>>,
+    asset_server: Res<AssetServer>,
     mut app_state: ResMut<State<AppState>>,
 ) {
-    //info!("Checking if loaded...");
-    for handle in metadata.characters.iter() {
-        if characters.get(handle).is_none() {
-            //error!("Character {:?} is not loaded.", handle);
-            return;
-        }
-    }
-    for handle in metadata.stages.iter() {
-        if stages.get(handle).is_none() {
-            error!("Stage {:?} is not loaded.", handle);
-            return;
+    let ids = metadata
+        .characters
+        .iter()
+        .map(|handle| handle.id)
+        .chain(metadata.stages.iter().map(|handle| handle.id));
+    for id in ids {
+        match asset_server.get_load_state(id) {
+            LoadState::NotLoaded => panic!("Assets failed to start loading"),
+            LoadState::Loaded | LoadState::Failed => continue,
+            LoadState::Loading => return,
         }
     }
     app_state
         .replace(AppState::MATCH)
-        .expect("Unable to change game state.")
+        .expect("Unable to change game state.");
 }
 
 fn cleanup_loading(characters: Res<Assets<CharacterAsset>>, stages: Res<Assets<StageAsset>>) {
