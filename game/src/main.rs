@@ -1,3 +1,4 @@
+#[windows_subsystem = "windows"]
 use bevy::prelude::*;
 use fc_core::input::*;
 use std::collections::HashMap;
