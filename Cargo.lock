@@ -994,9 +994,12 @@ dependencies = [
 name = "fc"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "bevy",
  "fc-core",
  "serde",
+ "serde_json",
+ "uuid",
 ]
 
 [[package]]

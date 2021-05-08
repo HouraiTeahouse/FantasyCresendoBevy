@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use fc_core::input::*;
 use std::collections::HashMap;
 
+mod data;
 mod input;
 mod r#match;
 
@@ -9,6 +10,7 @@ use r#match::*;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum AppState {
+    STARTUP,
     MATCH,
 }
 
@@ -27,10 +29,16 @@ fn create_input_source(arrow: ButtonAxis2D<KeyCode>) -> InputSource {
 
 fn main() {
     App::build()
+        .insert_resource(WindowDescriptor {
+            title: "Fantasy Crescendo".to_string(),
+            vsync: true,
+            ..Default::default()
+        })
+        .add_state(AppState::STARTUP)
         .add_plugins(DefaultPlugins)
         .add_plugin(input::FcInputPlugin)
+        .add_plugin(data::FcAssetsPlugin)
         .add_plugin(r#match::FcMatchPlugin)
-        .add_state(AppState::MATCH)
         .insert_resource(Msaa { samples: 1 })
         .insert_resource(MatchConfig {
             rule: MatchRule::Stock(3),
