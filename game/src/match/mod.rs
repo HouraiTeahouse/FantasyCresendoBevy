@@ -1,13 +1,13 @@
 use self::player::*;
 use crate::AppState;
-use bevy::prelude::*;
+use bevy::{prelude::*, render::camera::Camera};
 use fc_core::{
     character::{frame_data::*, state::*},
     input::*,
 };
 use serde::{Deserialize, Serialize};
 
-pub mod hitbox;
+mod hitbox;
 mod input;
 pub mod player;
 
@@ -133,6 +133,29 @@ fn move_players(mut query: Query<(&mut Transform, &PlayerInput)>) {
     }
 }
 
+fn update_camera(
+    mut camera: Query<&mut Transform, With<Camera>>,
+    players: Query<&GlobalTransform, With<Player>>
+) {
+    // TODO(james7132): Make this movement more smooth
+    let mut position = Vec2::ZERO;
+    let mut count: u16 = 0;
+    for transform in players.iter() {
+        position += Vec2::from(transform.translation);
+        count += 1;
+    }
+
+    if count == 0 {
+        return;
+    }
+    let average_pos = position / f32::from(count);
+
+    for mut transform in camera.iter_mut() {
+        transform.translation.x = average_pos.x;
+        transform.translation.y = average_pos.y;
+    }
+}
+
 pub struct FcMatchPlugin;
 
 impl Plugin for FcMatchPlugin {
@@ -147,7 +170,8 @@ impl Plugin for FcMatchPlugin {
                     .with_system(sample_frames.system())
                     .with_system(input::sample_input.system())
                     .with_system(hitbox::update_hitboxes.system())
-                    .with_system(update_match_state.system()),
+                    .with_system(update_match_state.system())
+                    .with_system(update_camera.system()),
             );
     }
 }
