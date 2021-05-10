@@ -7,8 +7,6 @@ First, thank you for considering contributing to Hourai! It's people like you th
 We welcome any type of contribution, not only code. You can help with
 - **QA**: file bug reports, the more details you can give the better (e.g.
   screenshots of the bot's behavior)
-- **Marketing**: writing howto's, voting for the bot on
-  [top.gg](https://top.gg/), ...
 - **Translation**: Translating documentation, bot messages, etc. to other
   languages.
 - **Documentaion**: Hourai is a complicated bot, improving documentation and

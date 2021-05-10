@@ -5,6 +5,8 @@ use fc_core::input::*;
 use std::collections::HashMap;
 
 mod data;
+#[cfg(debug_assertions)]
+mod debug;
 mod input;
 mod r#match;
 
@@ -30,8 +32,8 @@ fn create_input_source(arrow: ButtonAxis2D<KeyCode>) -> InputSource {
 }
 
 fn main() {
-    App::build()
-        .insert_resource(WindowDescriptor {
+    let mut app = App::build();
+    app .insert_resource(WindowDescriptor {
             title: "Fantasy Crescendo".to_string(),
             vsync: true,
             ..Default::default()
@@ -81,8 +83,13 @@ fn main() {
                 None,
             ],
         })
-        .add_startup_system(setup.system())
-        .run();
+        .add_startup_system(setup.system());
+
+    // Optional Plugins
+    #[cfg(debug_assertions)]
+    app.add_plugin(debug::FcDebugPlugin);
+
+    app.run();
 }
 
 /// set up a simple 3D scene
@@ -91,6 +98,12 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
+    // cameras
+    commands.spawn_bundle(UiCameraBundle::default());
+    commands.spawn_bundle(PerspectiveCameraBundle {
+        transform: Transform::from_xyz(0.0, 0.0, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
+        ..Default::default()
+    });
     // plane
     commands.spawn_bundle(PbrBundle {
         mesh: meshes.add(Mesh::from(shape::Plane { size: 500.0 })),
@@ -100,11 +113,6 @@ fn setup(
     // light
     commands.spawn_bundle(PointLightBundle {
         transform: Transform::from_xyz(4.0, 8.0, 4.0),
-        ..Default::default()
-    });
-    // camera
-    commands.spawn_bundle(PerspectiveCameraBundle {
-        transform: Transform::from_xyz(0.0, 0.0, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
         ..Default::default()
     });
 }
