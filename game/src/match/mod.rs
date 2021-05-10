@@ -1,6 +1,7 @@
 use self::player::*;
 use crate::AppState;
 use bevy::{prelude::*, render::camera::Camera};
+use bevy_rapier3d::{na::Vector3, rapier::dynamics::RigidBodySet, physics::RigidBodyHandleComponent};
 use fc_core::{
     character::{frame_data::*, state::*},
     input::*,
@@ -9,6 +10,7 @@ use serde::{Deserialize, Serialize};
 
 mod hitbox;
 mod input;
+mod physics;
 pub mod player;
 
 pub const MAX_PLAYERS_PER_MATCH: usize = 4;
@@ -127,9 +129,18 @@ fn sample_frames(mut query: Query<(&mut CharacterFrame, &mut PlayerState, &State
     }
 }
 
-fn move_players(mut query: Query<(&mut Transform, &PlayerInput)>) {
-    for (mut transform, input) in query.iter_mut() {
-        transform.translation += Vec3::from(input.current.movement) * 0.01;
+fn move_players(
+    query: Query<(&RigidBodyHandleComponent, &PlayerInput)>, 
+    mut rigidbodies: ResMut<RigidBodySet>
+) {
+    for (component, input) in query.iter() {
+        if let Some(rb) = rigidbodies.get_mut(component.handle()) {
+            let movement = &input.current.movement;
+            let mut transform = *rb.position();
+            transform.translation.x += f32::from(movement.x) * 0.1;
+            transform.translation.y += f32::from(movement.y) * 0.1;
+            rb.set_position(transform, true);
+        }
     }
 }
 

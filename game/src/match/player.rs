@@ -1,5 +1,6 @@
-use super::{hitbox, MatchRule};
+use super::{hitbox, physics::PhysicsGroups, MatchRule};
 use bevy::prelude::*;
+use bevy_rapier3d::rapier::{dynamics::*, geometry::*};
 use fc_core::{
     character::{frame_data::*, state::*},
     input::*,
@@ -166,8 +167,18 @@ pub(super) struct CharacterBundle {
 
 pub(super) fn spawn_player(commands: &mut Commands, bundle: PlayerBundle) -> Entity {
     let player_id = bundle.player.id;
+    let translation = bundle.pbr.transform.translation;
     commands
         .spawn_bundle(bundle)
+        .insert(RigidBodyBuilder::new_kinematic()
+            .translation(translation.x, translation.y, translation.y)
+            .lock_rotations()
+            .additional_mass(1.0))
+        .insert(ColliderBuilder::capsule_y(1.0, 0.5)
+            .collision_groups(InteractionGroups::none()
+                .with_groups(PhysicsGroups::PLAYER.bits())
+                .with_mask((PhysicsGroups::PLAYER | PhysicsGroups::STAGE).bits()))
+            .sensor(true))
         .with_children(|parent| {
             for bundle in hitbox::create_player_hitboxes(player_id) {
                 parent.spawn_bundle(bundle);

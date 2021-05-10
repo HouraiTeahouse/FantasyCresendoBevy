@@ -15,7 +15,7 @@ fn start_debug(mut commands: Commands, asset_server: Res<AssetServer>) {
                     value: "FPS: ".to_string(),
                     style: TextStyle {
                         font: asset_server.load("fonts/FiraSans-Bold.ttf"),
-                        font_size: 90.0,
+                        font_size: 15.0,
                         color: Color::WHITE,
                     },
                 },
@@ -23,7 +23,7 @@ fn start_debug(mut commands: Commands, asset_server: Res<AssetServer>) {
                     value: "".to_string(),
                     style: TextStyle {
                         font: asset_server.load("fonts/FiraMono-Medium.ttf"),
-                        font_size: 90.0,
+                        font_size: 15.0,
                         color: Color::GOLD,
                     },
                 },
