@@ -2,7 +2,7 @@ mod state;
 mod transition;
 
 use crate::character::frame_data::CharacterFrame;
-use bevy_reflect::TypeUuid;
+use bevy::reflect::TypeUuid;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 

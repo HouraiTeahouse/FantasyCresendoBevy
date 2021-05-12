@@ -1,4 +1,4 @@
-use bevy_reflect::TypeUuid;
+use bevy::reflect::TypeUuid;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, TypeUuid)]

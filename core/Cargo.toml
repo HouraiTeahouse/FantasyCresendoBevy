@@ -7,8 +7,11 @@ edition = "2018"
 [dependencies]
 bitflags = "1.2"
 serde = "1.0"
-bevy_math = "0.5"
-bevy_reflect = "0.5"
+
+[dependencies.bevy]
+version = "0.5"
+default-features = false
+features = ["render"]
 
 [dependencies.bevy_input]
 version = "0.5"

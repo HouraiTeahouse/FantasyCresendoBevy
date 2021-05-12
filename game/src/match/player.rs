@@ -156,6 +156,7 @@ impl PlayerDamage {
 #[derive(Bundle, Default)]
 pub(super) struct PlayerBundle {
     pub player: Player,
+    pub ecb: EnvironmentCollisionBox,
     pub input: PlayerInput,
     pub damage: PlayerDamage,
     pub input_source: InputSource,
@@ -170,6 +171,14 @@ pub(super) struct CharacterBundle {
     pub state: PlayerState,
     pub state_machine: StateMachine,
     pub frame: CharacterFrame,
+}
+
+#[derive(Default)]
+pub struct EnvironmentCollisionBox {
+    pub left: f32,
+    pub right: f32,
+    pub top: f32,
+    pub bottom: f32,
 }
 
 pub(super) fn spawn_player(commands: &mut Commands, bundle: PlayerBundle) -> Entity {

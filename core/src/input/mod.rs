@@ -1,5 +1,5 @@
+use bevy::math::{Vec2, Vec3};
 use bevy_input::{gamepad::GamepadButton, keyboard::KeyCode, Input};
-use bevy_math::{Vec2, Vec3};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::{collections::HashMap, hash::Hash};

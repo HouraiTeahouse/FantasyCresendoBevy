@@ -65,6 +65,14 @@ pub struct MatchState {
     pub players: [Option<Entity>; MAX_PLAYERS_PER_MATCH],
 }
 
+#[derive(Debug, Default)]
+pub struct MatchResult {
+    pub players: [Option<PlayerResult>; MAX_PLAYERS_PER_MATCH],
+}
+
+#[derive(Debug)]
+pub struct PlayerResult {}
+
 fn init_match(
     config: Res<MatchConfig>,
     mut commands: Commands,
@@ -90,6 +98,12 @@ fn init_match(
                     player: Player { id: id as u8 },
                     damage: player::PlayerDamage::new(&config.rule, &cfg),
                     input_source: cfg.input.clone(),
+                    ecb: player::EnvironmentCollisionBox {
+                        left: 0.25,
+                        right: 0.25,
+                        top: 0.5,
+                        bottom: 0.5,
+                    },
                     pbr: PbrBundle {
                         mesh: mesh.clone(),
                         material: materials.add(player::get_player_color(id as PlayerId).into()),
@@ -175,6 +189,7 @@ impl Plugin for FcMatchPlugin {
     fn build(&self, builder: &mut AppBuilder) {
         builder
             .insert_resource(MatchConfig::default())
+            .insert_resource(MatchResult::default())
             .add_system_set(SystemSet::on_enter(AppState::MATCH).with_system(init_match.system()))
             .add_system_set(SystemSet::on_exit(AppState::MATCH).with_system(cleanup_match.system()))
             .add_system_set(
