@@ -1,6 +1,6 @@
 use bevy::{
     diagnostic::{Diagnostics, FrameTimeDiagnosticsPlugin},
-    prelude::*
+    prelude::*,
 };
 
 fn start_debug(mut commands: Commands, asset_server: Res<AssetServer>) {
@@ -48,8 +48,7 @@ pub struct FcDebugPlugin;
 
 impl Plugin for FcDebugPlugin {
     fn build(&self, app: &mut AppBuilder) {
-        app
-            .add_plugin(FrameTimeDiagnosticsPlugin)
+        app.add_plugin(FrameTimeDiagnosticsPlugin)
             .add_startup_system(start_debug.system())
             .add_system(update_fps_counter.system());
     }

@@ -57,6 +57,9 @@ impl Default for PlayerDamage {
 }
 
 impl PlayerDamage {
+    pub const MIN: f32 = 0.0;
+    pub const MAX: f32 = 999.99;
+
     pub fn new(rule: &MatchRule, config: &PlayerConfig) -> Self {
         match rule {
             MatchRule::Score => Self::Score {
@@ -87,8 +90,8 @@ impl PlayerDamage {
     /// Applies damage to the player.
     pub fn apply_damage(&mut self, dmg: f32) {
         match self {
-            Self::Score { damage, .. } => *damage += dmg,
-            Self::Stock { damage, .. } => *damage += dmg,
+            Self::Score { damage, .. } => *damage = Self::clamp(*damage + dmg),
+            Self::Stock { damage, .. } => *damage = Self::clamp(*damage + dmg),
             Self::Stamina { health, .. } => {
                 *health -= dmg;
                 if *health < 0.0 {
@@ -120,29 +123,33 @@ impl PlayerDamage {
         match self {
             Self::Score { .. } => true,
             Self::Stock { stocks, .. } => *stocks > 0,
-            Self::Stamina { health, .. } => false,
+            Self::Stamina { .. } => false,
         }
     }
 
-    /// Resets a player after
+    /// Resets a player after they've been killed.
     pub fn revive(&mut self) {
         match self {
             Self::Score {
                 damage,
                 default_damage,
                 ..
-            } => *damage = *default_damage,
+            } => *damage = Self::clamp(*default_damage),
             Self::Stock {
                 damage,
                 default_damage,
                 ..
-            } => *damage = *default_damage,
+            } => *damage = Self::clamp(*default_damage),
             Self::Stamina {
                 health,
                 full_health,
                 ..
-            } => *health = *full_health,
+            } => *health = Self::clamp(*full_health),
         }
+    }
+
+    fn clamp(dmg: f32) -> f32 {
+        f32::clamp(dmg, Self::MIN, Self::MAX)
     }
 }
 
@@ -170,15 +177,21 @@ pub(super) fn spawn_player(commands: &mut Commands, bundle: PlayerBundle) -> Ent
     let translation = bundle.pbr.transform.translation;
     commands
         .spawn_bundle(bundle)
-        .insert(RigidBodyBuilder::new_kinematic()
-            .translation(translation.x, translation.y, translation.y)
-            .lock_rotations()
-            .additional_mass(1.0))
-        .insert(ColliderBuilder::capsule_y(1.0, 0.5)
-            .collision_groups(InteractionGroups::none()
-                .with_groups(PhysicsGroups::PLAYER.bits())
-                .with_mask((PhysicsGroups::PLAYER | PhysicsGroups::STAGE).bits()))
-            .sensor(true))
+        .insert(
+            RigidBodyBuilder::new_kinematic()
+                .translation(translation.x, translation.y, translation.y)
+                .lock_rotations()
+                .additional_mass(1.0),
+        )
+        .insert(
+            ColliderBuilder::capsule_y(1.0, 0.5)
+                .collision_groups(
+                    InteractionGroups::none()
+                        .with_groups(PhysicsGroups::PLAYER.bits())
+                        .with_mask((PhysicsGroups::PLAYER | PhysicsGroups::STAGE).bits()),
+                )
+                .sensor(true),
+        )
         .with_children(|parent| {
             for bundle in hitbox::create_player_hitboxes(player_id) {
                 parent.spawn_bundle(bundle);

@@ -1,7 +1,9 @@
 use self::player::*;
 use crate::AppState;
 use bevy::{prelude::*, render::camera::Camera};
-use bevy_rapier3d::{na::Vector3, rapier::dynamics::RigidBodySet, physics::RigidBodyHandleComponent};
+use bevy_rapier3d::{
+    na::Vector3, physics::RigidBodyHandleComponent, rapier::dynamics::RigidBodySet,
+};
 use fc_core::{
     character::{frame_data::*, state::*},
     input::*,
@@ -130,8 +132,8 @@ fn sample_frames(mut query: Query<(&mut CharacterFrame, &mut PlayerState, &State
 }
 
 fn move_players(
-    query: Query<(&RigidBodyHandleComponent, &PlayerInput)>, 
-    mut rigidbodies: ResMut<RigidBodySet>
+    query: Query<(&RigidBodyHandleComponent, &PlayerInput)>,
+    mut rigidbodies: ResMut<RigidBodySet>,
 ) {
     for (component, input) in query.iter() {
         if let Some(rb) = rigidbodies.get_mut(component.handle()) {

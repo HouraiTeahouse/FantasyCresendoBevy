@@ -5,11 +5,8 @@ extern crate bitflags;
 use bevy::prelude::*;
 use bevy_rapier3d::{
     na::{Unit, Vector3},
-    physics::RapierPhysicsPlugin, 
-    rapier::{
-        dynamics::RigidBodyBuilder,
-        geometry::ColliderBuilder,
-    }
+    physics::RapierPhysicsPlugin,
+    rapier::{dynamics::RigidBodyBuilder, geometry::ColliderBuilder},
 };
 use fc_core::input::*;
 use std::collections::HashMap;
@@ -43,57 +40,57 @@ fn create_input_source(arrow: ButtonAxis2D<KeyCode>) -> InputSource {
 
 fn main() {
     let mut app = App::build();
-    app .insert_resource(WindowDescriptor {
-            title: "Fantasy Crescendo".to_string(),
-            vsync: true,
-            ..Default::default()
-        })
-        .add_state(AppState::STARTUP)
-        .add_plugins(DefaultPlugins)
-        .add_plugin(RapierPhysicsPlugin)
-        .add_plugin(input::FcInputPlugin)
-        .add_plugin(data::FcAssetsPlugin)
-        .add_plugin(r#match::FcMatchPlugin)
-        .insert_resource(Msaa { samples: 1 })
-        .insert_resource(MatchConfig {
-            rule: MatchRule::Stock(3),
-            time: None,
-            players: [
-                Some(player::PlayerConfig {
-                    character_id: 0,
-                    pallete: 0,
-                    default_damage: 0.0,
-                    input: create_input_source(ButtonAxis2D::<KeyCode> {
-                        horizontal: ButtonAxis1D::<KeyCode> {
-                            pos: KeyCode::D,
-                            neg: KeyCode::A,
-                        },
-                        vertical: ButtonAxis1D::<KeyCode> {
-                            pos: KeyCode::W,
-                            neg: KeyCode::S,
-                        },
-                    }),
+    app.insert_resource(WindowDescriptor {
+        title: "Fantasy Crescendo".to_string(),
+        vsync: true,
+        ..Default::default()
+    })
+    .add_state(AppState::STARTUP)
+    .add_plugins(DefaultPlugins)
+    .add_plugin(RapierPhysicsPlugin)
+    .add_plugin(input::FcInputPlugin)
+    .add_plugin(data::FcAssetsPlugin)
+    .add_plugin(r#match::FcMatchPlugin)
+    .insert_resource(Msaa { samples: 1 })
+    .insert_resource(MatchConfig {
+        rule: MatchRule::Stock(3),
+        time: None,
+        players: [
+            Some(player::PlayerConfig {
+                character_id: 0,
+                pallete: 0,
+                default_damage: 0.0,
+                input: create_input_source(ButtonAxis2D::<KeyCode> {
+                    horizontal: ButtonAxis1D::<KeyCode> {
+                        pos: KeyCode::D,
+                        neg: KeyCode::A,
+                    },
+                    vertical: ButtonAxis1D::<KeyCode> {
+                        pos: KeyCode::W,
+                        neg: KeyCode::S,
+                    },
                 }),
-                Some(player::PlayerConfig {
-                    character_id: 0,
-                    pallete: 0,
-                    default_damage: 0.0,
-                    input: create_input_source(ButtonAxis2D::<KeyCode> {
-                        horizontal: ButtonAxis1D::<KeyCode> {
-                            pos: KeyCode::L,
-                            neg: KeyCode::J,
-                        },
-                        vertical: ButtonAxis1D::<KeyCode> {
-                            pos: KeyCode::I,
-                            neg: KeyCode::K,
-                        },
-                    }),
+            }),
+            Some(player::PlayerConfig {
+                character_id: 0,
+                pallete: 0,
+                default_damage: 0.0,
+                input: create_input_source(ButtonAxis2D::<KeyCode> {
+                    horizontal: ButtonAxis1D::<KeyCode> {
+                        pos: KeyCode::L,
+                        neg: KeyCode::J,
+                    },
+                    vertical: ButtonAxis1D::<KeyCode> {
+                        pos: KeyCode::I,
+                        neg: KeyCode::K,
+                    },
                 }),
-                None,
-                None,
-            ],
-        })
-        .add_startup_system(setup.system());
+            }),
+            None,
+            None,
+        ],
+    })
+    .add_startup_system(setup.system());
 
     // Optional Plugins
     #[cfg(debug_assertions)]
@@ -115,13 +112,16 @@ fn setup(
         ..Default::default()
     });
     // plane
-    commands.spawn_bundle(PbrBundle {
-        mesh: meshes.add(Mesh::from(shape::Plane { size: 500.0 })),
-        material: materials.add(Color::rgb(0.3, 0.5, 0.3).into()),
-        ..Default::default()
-    })
-    .insert(RigidBodyBuilder::new_static())
-    .insert(ColliderBuilder::halfspace(Unit::new_normalize(Vector3::new(0.0, -1.0, 0.0))));
+    commands
+        .spawn_bundle(PbrBundle {
+            mesh: meshes.add(Mesh::from(shape::Plane { size: 500.0 })),
+            material: materials.add(Color::rgb(0.3, 0.5, 0.3).into()),
+            ..Default::default()
+        })
+        .insert(RigidBodyBuilder::new_static())
+        .insert(ColliderBuilder::halfspace(Unit::new_normalize(
+            Vector3::new(0.0, -1.0, 0.0),
+        )));
     // light
     commands.spawn_bundle(PointLightBundle {
         transform: Transform::from_xyz(4.0, 8.0, 4.0),
