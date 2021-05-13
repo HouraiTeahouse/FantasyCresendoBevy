@@ -25,11 +25,12 @@ pub struct PlayerConfig {
     pub input: InputSource,
 }
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct Player {
     pub id: PlayerId,
 }
 
+#[derive(Debug, Clone)]
 pub(super) enum PlayerDamage {
     Score {
         score: i16,
@@ -99,6 +100,15 @@ impl PlayerDamage {
                     *health = 0.0
                 }
             }
+        }
+    }
+
+    /// Checks if the player is alive.
+    pub fn is_alive(&self) -> bool {
+        match self {
+            Self::Score { .. } => true,
+            Self::Stock { stocks, .. } => *stocks > 0,
+            Self::Stamina { health, .. } => *health > 0.0,
         }
     }
 

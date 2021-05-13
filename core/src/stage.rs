@@ -1,3 +1,4 @@
+use crate::geo::Bounds2D;
 use bevy::reflect::TypeUuid;
 use serde::{Deserialize, Serialize};
 
@@ -6,3 +7,6 @@ use serde::{Deserialize, Serialize};
 pub struct StageAsset {
     pub name: String,
 }
+
+#[derive(Debug, Clone)]
+pub struct BlastZone(pub Bounds2D);

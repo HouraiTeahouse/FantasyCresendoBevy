@@ -18,6 +18,7 @@ mod hitbox;
 mod input;
 mod physics;
 pub mod player;
+mod stage;
 
 pub const MAX_PLAYERS_PER_MATCH: usize = 4;
 
@@ -220,6 +221,10 @@ fn update_camera(
     }
 }
 
+pub(self) fn on_match_update() -> SystemSet {
+    SystemSet::on_update(AppState::MATCH)
+}
+
 pub struct FcMatchPlugin;
 
 impl Plugin for FcMatchPlugin {
@@ -230,7 +235,7 @@ impl Plugin for FcMatchPlugin {
             .add_system_set(SystemSet::on_enter(AppState::MATCH).with_system(init_match.system()))
             .add_system_set(SystemSet::on_exit(AppState::MATCH).with_system(cleanup_match.system()))
             .add_system_set(
-                SystemSet::on_update(AppState::MATCH)
+                on_match_update()
                     .with_system(move_players.system())
                     .with_system(sample_frames.system())
                     .with_system(input::sample_input.system())
@@ -238,5 +243,6 @@ impl Plugin for FcMatchPlugin {
                     .with_system(update_match_state.system())
                     .with_system(update_camera.system()),
             );
+        stage::build(builder);
     }
 }
