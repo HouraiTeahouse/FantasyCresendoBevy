@@ -1,10 +1,11 @@
 use crate::r#match::player::{EnvironmentCollisionBox, Player};
 use bevy::{
     diagnostic::{Diagnostics, FrameTimeDiagnosticsPlugin},
+    math::*,
     prelude::*,
 };
-pub use fc_core::debug::DebugLines;
 use fc_core::debug::DebugLinesPlugin;
+pub use fc_core::{debug::DebugLines, geo::*};
 
 fn start_debug(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.spawn_bundle(TextBundle {
@@ -48,12 +49,14 @@ fn update_fps_counter(diagnostics: Res<Diagnostics>, mut query: Query<&mut Text>
 }
 
 fn draw_player_debug(
-    query: Query<(&GlobalTransform, &EnvironmentCollisionBox), With<Player>>,
+    query: Query<(&Transform, &EnvironmentCollisionBox), With<Player>>,
     mut lines: ResMut<DebugLines>,
 ) {
     const SIZE: f32 = 0.25;
+    let mut total_bounds: Option<Bounds2D> = None;
     for (transform, ecb) in query.iter() {
-        let center = transform.translation;
+        let mut center = transform.translation;
+        center.z = 0.0;
         lines.line_colored(
             center + Vec3::new(-SIZE, 0.0, 0.0),
             center + Vec3::new(SIZE, 0.0, 0.0),
@@ -65,6 +68,17 @@ fn draw_player_debug(
             Color::GRAY,
         );
 
+        let mut bounds = Bounds2D::from(ecb.clone());
+        bounds.center += center.xy();
+        bounds.center.y += ecb.bottom;
+        lines.bounds_2d(bounds, Color::GREEN);
+
+        if let Some(ref mut total) = total_bounds {
+            total.merge_with(bounds);
+        } else {
+            total_bounds = Some(bounds);
+        }
+
         let ecb_bottom = center;
         let ecb_center = center + Vec3::new(0.0, ecb.bottom, 0.0);
         let ecb_top = ecb_center + Vec3::new(0.0, ecb.top, 0.0);
@@ -75,6 +89,10 @@ fn draw_player_debug(
         lines.line_colored(ecb_bottom, ecb_left, Color::YELLOW);
         lines.line_colored(ecb_top, ecb_right, Color::YELLOW);
         lines.line_colored(ecb_top, ecb_left, Color::YELLOW);
+    }
+
+    if let Some(bounds) = total_bounds {
+        lines.bounds_2d(bounds, Color::CYAN);
     }
 }
 

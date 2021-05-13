@@ -1,3 +1,4 @@
+use crate::geo::*;
 /// This is a fork of the bevy_debug_lines plugin that has no long term lines.
 /// All lines last only one frame.
 use bevy::prelude::*;
@@ -186,6 +187,55 @@ impl DebugLines {
         }
 
         self.lines.push(line);
+    }
+
+    pub fn bounds_2d(&mut self, bounds: impl Into<Bounds2D>, color: Color) {
+        let bounds = bounds.into();
+
+        let min = Vec3::from((bounds.min(), 0.0));
+        let max = Vec3::from((bounds.max(), 0.0));
+
+        {
+            let mut temp = min;
+            temp.x = max.x;
+            self.line_colored(min, temp, color);
+            self.line_colored(max, temp, color);
+        }
+
+        {
+            let mut temp = min;
+            temp.y = max.y;
+            self.line_colored(min, temp, color);
+            self.line_colored(max, temp, color);
+        }
+    }
+
+    pub fn bounds_3d(&mut self, bounds: impl Into<Bounds3D>, color: Color) {
+        let bounds = bounds.into();
+
+        let min = bounds.min();
+        let max = bounds.max();
+
+        {
+            let mut temp = min;
+            temp.x = max.x;
+            self.line_colored(min, temp, color);
+            self.line_colored(max, temp, color);
+        }
+
+        {
+            let mut temp = min;
+            temp.y = max.y;
+            self.line_colored(min, temp, color);
+            self.line_colored(max, temp, color);
+        }
+
+        {
+            let mut temp = min;
+            temp.z = max.z;
+            self.line_colored(min, temp, color);
+            self.line_colored(max, temp, color);
+        }
     }
 }
 

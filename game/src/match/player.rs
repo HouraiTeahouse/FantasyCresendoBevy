@@ -3,6 +3,7 @@ use bevy::prelude::*;
 use bevy_rapier3d::rapier::{dynamics::*, geometry::*};
 use fc_core::{
     character::{frame_data::*, state::*},
+    geo::*,
     input::*,
 };
 use serde::{Deserialize, Serialize};
@@ -173,12 +174,23 @@ pub(super) struct CharacterBundle {
     pub frame: CharacterFrame,
 }
 
-#[derive(Default)]
+#[derive(Debug, Default, Clone)]
 pub struct EnvironmentCollisionBox {
     pub left: f32,
     pub right: f32,
     pub top: f32,
     pub bottom: f32,
+}
+
+impl From<EnvironmentCollisionBox> for Bounds2D {
+    fn from(value: EnvironmentCollisionBox) -> Self {
+        Self::from(Rect::<f32> {
+            left: -value.left,
+            right: value.right,
+            top: -value.top,
+            bottom: value.bottom,
+        })
+    }
 }
 
 pub(super) fn spawn_player(commands: &mut Commands, bundle: PlayerBundle) -> Entity {
