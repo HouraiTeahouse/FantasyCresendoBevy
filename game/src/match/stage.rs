@@ -9,6 +9,13 @@ pub(super) struct PlayerDied {
     pub damage: PlayerDamage,
 }
 
+fn setup_stage(mut commands: Commands) {
+    commands.spawn().insert(BlastZone(Bounds2D {
+        center: Vec2::ZERO,
+        extents: Vec2::new(10.0, 10.0),
+    }));
+}
+
 fn kill_players(
     blast_zones: Query<&BlastZone>,
     mut players: Query<(&mut PlayerDamage, &GlobalTransform, &Player)>,
@@ -36,5 +43,6 @@ fn kill_players(
 pub(super) fn build(builder: &mut AppBuilder) {
     builder
         .add_event::<PlayerDied>()
+        .add_startup_system(setup_stage.system())
         .add_system_set(on_match_update().with_system(kill_players.system()));
 }

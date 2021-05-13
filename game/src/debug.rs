@@ -4,8 +4,8 @@ use bevy::{
     math::*,
     prelude::*,
 };
-use fc_core::debug::DebugLinesPlugin;
 pub use fc_core::{debug::DebugLines, geo::*};
+use fc_core::{debug::DebugLinesPlugin, stage::BlastZone};
 
 fn start_debug(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.spawn_bundle(TextBundle {
@@ -96,6 +96,12 @@ fn draw_player_debug(
     }
 }
 
+fn draw_blast_zone_debug(blast_zones: Query<&BlastZone>, mut lines: ResMut<DebugLines>) {
+    for blast_zone in blast_zones.iter() {
+        lines.bounds_2d(blast_zone.0, Color::MAROON);
+    }
+}
+
 pub struct FcDebugPlugin;
 
 impl Plugin for FcDebugPlugin {
@@ -104,6 +110,7 @@ impl Plugin for FcDebugPlugin {
             .add_plugin(DebugLinesPlugin)
             .add_startup_system(start_debug.system())
             .add_system(update_fps_counter.system())
-            .add_system(draw_player_debug.system());
+            .add_system(draw_player_debug.system())
+            .add_system(draw_blast_zone_debug.system());
     }
 }
