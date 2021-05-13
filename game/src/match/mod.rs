@@ -1,11 +1,15 @@
 use self::player::*;
 use crate::AppState;
-use bevy::{prelude::*, render::camera::Camera};
-use bevy_rapier3d::{
-    na::Vector3, physics::RigidBodyHandleComponent, rapier::dynamics::RigidBodySet,
+use bevy::{
+    math::*,
+    prelude::*,
+    render::camera::{Camera, PerspectiveProjection},
+    window::Windows,
 };
+use bevy_rapier3d::{physics::RigidBodyHandleComponent, rapier::dynamics::RigidBodySet};
 use fc_core::{
     character::{frame_data::*, state::*},
+    geo::*,
     input::*,
 };
 use serde::{Deserialize, Serialize};
@@ -161,25 +165,58 @@ fn move_players(
 }
 
 fn update_camera(
-    mut camera: Query<&mut Transform, With<Camera>>,
-    players: Query<&GlobalTransform, With<Player>>,
+    mut cameras: Query<(&mut Transform, &Camera, &PerspectiveProjection)>,
+    players: Query<(&GlobalTransform, &EnvironmentCollisionBox), With<Player>>,
+    windows: Res<Windows>,
 ) {
-    // TODO(james7132): Make this movement more smooth
-    let mut position = Vec2::ZERO;
-    let mut count: u16 = 0;
-    for transform in players.iter() {
-        position += Vec2::from(transform.translation);
-        count += 1;
+    let mut total_bounds: Option<Bounds2D> = None;
+    for (transform, ecb) in players.iter() {
+        let mut bounds = Bounds2D::from(ecb.clone());
+        bounds.center += transform.translation.xy();
+        if let Some(ref mut total) = total_bounds {
+            total.merge_with(bounds);
+        } else {
+            total_bounds = Some(bounds);
+        }
     }
 
-    if count == 0 {
+    if total_bounds.is_none() {
         return;
     }
-    let average_pos = position / f32::from(count);
 
-    for mut transform in camera.iter_mut() {
-        transform.translation.x = average_pos.x;
-        transform.translation.y = average_pos.y;
+    let total_bounds = total_bounds.unwrap();
+    let (width, height) = total_bounds.size().into();
+    let center = total_bounds.center;
+    if height == 0.0 {
+        return;
+    }
+    let rect_aspect = width / height;
+    for (mut transform, camera, projection) in cameras.iter_mut() {
+        if let Some(window) = windows.get(camera.window) {
+            let (w_width, w_height) = (window.physical_width(), window.physical_height());
+            if w_height == 0 {
+                continue;
+            }
+            let aspect_ratio = (w_width as f32) / (w_height as f32);
+
+            // camera distance
+            let radius = (height - center.y).max(width - center.x);
+            let camera_distance = &mut transform.translation.z;
+            *camera_distance = radius / (projection.fov / 2.0).tan();
+            if rect_aspect > aspect_ratio {
+                if aspect_ratio > 1.0 {
+                    *camera_distance /= aspect_ratio;
+                } else {
+                    *camera_distance *= aspect_ratio;
+                }
+            } else if width > height {
+                *camera_distance /= rect_aspect;
+            }
+        } else {
+            warn!("Cannot find associated window: {}", camera.window);
+        }
+        transform.translation.x = total_bounds.center.x;
+        transform.translation.y = total_bounds.center.y;
     }
 }
 
