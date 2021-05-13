@@ -1,11 +1,17 @@
-use crate::r#match::player::{EnvironmentCollisionBox, Player};
+use crate::r#match::player::EnvironmentCollisionBox;
 use bevy::{
     diagnostic::{Diagnostics, FrameTimeDiagnosticsPlugin},
     math::*,
     prelude::*,
 };
 pub use fc_core::{debug::DebugLines, geo::*};
-use fc_core::{debug::DebugLinesPlugin, stage::BlastZone};
+use fc_core::{
+    debug::DebugLinesPlugin,
+    player::Player,
+    stage::{BlastZone, RespawnPoint, SpawnPoint},
+};
+
+const CROSS_SIZE: f32 = 0.25;
 
 fn start_debug(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.spawn_bundle(TextBundle {
@@ -57,21 +63,11 @@ fn draw_player_debug(
     for (transform, ecb) in query.iter() {
         let mut center = transform.translation;
         center.z = 0.0;
-        lines.line_colored(
-            center + Vec3::new(-SIZE, 0.0, 0.0),
-            center + Vec3::new(SIZE, 0.0, 0.0),
-            Color::GRAY,
-        );
-        lines.line_colored(
-            center + Vec3::new(0.0, -SIZE, 0.0),
-            center + Vec3::new(0.0, SIZE, 0.0),
-            Color::GRAY,
-        );
+        lines.cross_2d(center, SIZE, Color::GRAY);
 
         let mut bounds = Bounds2D::from(ecb.clone());
         bounds.center += center.xy();
         bounds.center.y += ecb.bottom;
-        lines.bounds_2d(bounds, Color::GREEN);
 
         if let Some(ref mut total) = total_bounds {
             total.merge_with(bounds);
@@ -79,16 +75,18 @@ fn draw_player_debug(
             total_bounds = Some(bounds);
         }
 
-        let ecb_bottom = center;
         let ecb_center = center + Vec3::new(0.0, ecb.bottom, 0.0);
-        let ecb_top = ecb_center + Vec3::new(0.0, ecb.top, 0.0);
-        let ecb_left = ecb_center + Vec3::new(-ecb.left, 0.0, 0.0);
-        let ecb_right = ecb_center + Vec3::new(ecb.right, 0.0, 0.0);
-
-        lines.line_colored(ecb_bottom, ecb_right, Color::YELLOW);
-        lines.line_colored(ecb_bottom, ecb_left, Color::YELLOW);
-        lines.line_colored(ecb_top, ecb_right, Color::YELLOW);
-        lines.line_colored(ecb_top, ecb_left, Color::YELLOW);
+        lines.polygon(
+            [
+                center,
+                ecb_center + Vec3::new(-ecb.left, 0.0, 0.0),
+                ecb_center + Vec3::new(0.0, ecb.top, 0.0),
+                ecb_center + Vec3::new(ecb.right, 0.0, 0.0),
+            ]
+            .iter()
+            .cloned(),
+            Color::YELLOW,
+        );
     }
 
     if let Some(bounds) = total_bounds {
@@ -96,7 +94,23 @@ fn draw_player_debug(
     }
 }
 
-fn draw_blast_zone_debug(blast_zones: Query<&BlastZone>, mut lines: ResMut<DebugLines>) {
+fn draw_stage_debug(
+    spawn: Query<&SpawnPoint>,
+    respawn: Query<&RespawnPoint>,
+    blast_zones: Query<&BlastZone>,
+    mut lines: ResMut<DebugLines>,
+) {
+    for point in spawn.iter() {
+        lines.cross_2d(Vec3::from((point.position, 0.0)), CROSS_SIZE, Color::YELLOW);
+    }
+    for point in respawn.iter() {
+        let color = if point.occupied_by.is_none() {
+            Color::CYAN
+        } else {
+            Color::RED
+        };
+        lines.cross_2d(Vec3::from((point.position, 0.0)), CROSS_SIZE, color);
+    }
     for blast_zone in blast_zones.iter() {
         lines.bounds_2d(blast_zone.0, Color::MAROON);
     }
@@ -111,6 +125,6 @@ impl Plugin for FcDebugPlugin {
             .add_startup_system(start_debug.system())
             .add_system(update_fps_counter.system())
             .add_system(draw_player_debug.system())
-            .add_system(draw_blast_zone_debug.system());
+            .add_system(draw_stage_debug.system());
     }
 }

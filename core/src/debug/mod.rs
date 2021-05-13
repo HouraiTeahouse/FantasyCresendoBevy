@@ -237,6 +237,68 @@ impl DebugLines {
             self.line_colored(max, temp, color);
         }
     }
+
+    pub fn cross_2d(&mut self, center: Vec3, size: f32, color: Color) {
+        self.line_colored(
+            center + Vec3::new(-size, 0.0, 0.0),
+            center + Vec3::new(size, 0.0, 0.0),
+            color,
+        );
+        self.line_colored(
+            center + Vec3::new(0.0, -size, 0.0),
+            center + Vec3::new(0.0, size, 0.0),
+            color,
+        );
+    }
+
+    pub fn cross_3d(&mut self, center: Vec3, size: f32, color: Color) {
+        self.line_colored(
+            center + Vec3::new(-size, 0.0, 0.0),
+            center + Vec3::new(size, 0.0, 0.0),
+            color,
+        );
+        self.line_colored(
+            center + Vec3::new(0.0, -size, 0.0),
+            center + Vec3::new(0.0, size, 0.0),
+            color,
+        );
+        self.line_colored(
+            center + Vec3::new(0.0, 0.0, -size),
+            center + Vec3::new(0.0, 0.0, size),
+            color,
+        );
+    }
+
+    pub fn polyline(&mut self, points: impl Iterator<Item = Vec3>, color: Color) {
+        let mut last: Option<Vec3> = None;
+        for point in points {
+            if let Some(last_point) = last {
+                self.line_colored(last_point, point, color);
+            } else {
+                last = Some(point);
+            }
+        }
+    }
+
+    pub fn polygon(&mut self, points: impl Iterator<Item = Vec3>, color: Color) {
+        let mut first: Option<Vec3> = None;
+        let mut last: Option<Vec3> = None;
+        for point in points {
+            if first.is_none() {
+                first = Some(point);
+            }
+            if let Some(last_point) = last {
+                self.line_colored(last_point, point, color);
+            }
+            last = Some(point);
+        }
+        match (first, last) {
+            (Some(first), Some(last)) => {
+                self.line_colored(last, first, color);
+            }
+            _ => {}
+        }
+    }
 }
 
 fn draw_lines(

@@ -1,6 +1,7 @@
-use super::{player::*, MatchState};
+use super::MatchState;
 use bevy::prelude::*;
 use fc_core::character::frame_data::*;
+use fc_core::player::{Player, PlayerId};
 
 #[derive(Clone, Debug, Default)]
 pub struct HitboxState {

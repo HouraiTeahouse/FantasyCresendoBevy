@@ -5,4 +5,5 @@ pub mod character;
 pub mod debug;
 pub mod geo;
 pub mod input;
+pub mod player;
 pub mod stage;

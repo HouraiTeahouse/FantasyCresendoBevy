@@ -5,12 +5,11 @@ use fc_core::{
     character::{frame_data::*, state::*},
     geo::*,
     input::*,
+    player::*,
 };
 use serde::{Deserialize, Serialize};
 
 const PLAYER_COLORS: &[Color] = &[Color::RED, Color::BLUE, Color::YELLOW, Color::GREEN];
-
-pub type PlayerId = u8;
 
 #[derive(Clone, Deserialize, Serialize)]
 pub struct PlayerConfig {
@@ -23,11 +22,6 @@ pub struct PlayerConfig {
     /// The default damage the player starts with upon respawning.
     #[serde(skip)]
     pub input: InputSource,
-}
-
-#[derive(Default, Clone)]
-pub struct Player {
-    pub id: PlayerId,
 }
 
 #[derive(Debug, Clone)]

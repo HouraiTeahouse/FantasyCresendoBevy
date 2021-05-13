@@ -11,6 +11,7 @@ use fc_core::{
     character::{frame_data::*, state::*},
     geo::*,
     input::*,
+    player::{Player, PlayerId},
 };
 use serde::{Deserialize, Serialize};
 

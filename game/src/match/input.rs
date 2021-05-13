@@ -1,6 +1,5 @@
-use super::player::Player;
 use bevy::prelude::*;
-use fc_core::input::*;
+use fc_core::{input::*, player::Player};
 
 pub(super) fn sample_input(
     keyboard: Res<Input<KeyCode>>,

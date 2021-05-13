@@ -1,7 +1,11 @@
 use super::on_match_update;
-use super::player::{Player, PlayerDamage};
+use super::player::PlayerDamage;
 use bevy::{math::*, prelude::*};
-use fc_core::{geo::Bounds2D, stage::BlastZone};
+use fc_core::{
+    geo::Bounds2D,
+    player::{Facing, Player},
+    stage::{BlastZone, RespawnPoint, SpawnPoint},
+};
 
 pub(super) struct PlayerDied {
     pub revive: bool,
@@ -14,16 +18,56 @@ fn setup_stage(mut commands: Commands) {
         center: Vec2::ZERO,
         extents: Vec2::new(10.0, 10.0),
     }));
+
+    // Add spawn points.
+    commands.spawn().insert(SpawnPoint {
+        position: Vec2::new(-3.0, 0.0),
+        facing: Facing::Right,
+    });
+    commands.spawn().insert(SpawnPoint {
+        position: Vec2::new(-1.0, 0.0),
+        facing: Facing::Right,
+    });
+    commands.spawn().insert(SpawnPoint {
+        position: Vec2::new(1.0, 0.0),
+        facing: Facing::Right,
+    });
+    commands.spawn().insert(SpawnPoint {
+        position: Vec2::new(3.0, 0.0),
+        facing: Facing::Right,
+    });
+
+    // Add respawn points.
+    commands.spawn().insert(RespawnPoint {
+        position: Vec2::new(-6.0, 4.0),
+        facing: Facing::Right,
+        occupied_by: None,
+    });
+    commands.spawn().insert(RespawnPoint {
+        position: Vec2::new(-2.0, 4.0),
+        facing: Facing::Right,
+        occupied_by: None,
+    });
+    commands.spawn().insert(RespawnPoint {
+        position: Vec2::new(2.0, 4.0),
+        facing: Facing::Right,
+        occupied_by: None,
+    });
+    commands.spawn().insert(RespawnPoint {
+        position: Vec2::new(6.0, 4.0),
+        facing: Facing::Right,
+        occupied_by: None,
+    });
 }
 
 fn kill_players(
     blast_zones: Query<&BlastZone>,
-    mut players: Query<(&mut PlayerDamage, &GlobalTransform, &Player)>,
+    mut players: Query<(&mut PlayerDamage, &mut Transform, &GlobalTransform, &Player)>,
     mut died: EventWriter<PlayerDied>,
 ) {
     let bounds: Vec<&Bounds2D> = blast_zones.iter().map(|bz| &bz.0).collect();
-    for (mut damage, transform, player) in players.iter_mut() {
-        let position = transform.translation.xy();
+    for (mut damage, mut transform, global_transform, player) in players.iter_mut() {
+        let position = global_transform.translation.xy();
         if damage.is_alive() && !bounds.iter().any(|bounds| bounds.contains_point(position)) {
             damage.kill();
             let revive = damage.can_revive();
