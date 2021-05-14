@@ -1,17 +1,14 @@
 use super::on_match_update;
-use super::player::{PlayerBody, PlayerDamage, PlayerLocation};
+use super::{
+    events::PlayerDied,
+    player::{PlayerBody, PlayerDamage, PlayerLocation},
+};
 use bevy::{math::*, prelude::*};
 use fc_core::{
     geo::Bounds2D,
     player::{Facing, Player},
     stage::{BlastZone, RespawnPoint, SpawnPoint},
 };
-
-pub(super) struct PlayerDied {
-    pub revive: bool,
-    pub player: Player,
-    pub damage: PlayerDamage,
-}
 
 fn setup_stage(mut commands: Commands) {
     commands.spawn().insert(BlastZone(Bounds2D {
@@ -86,7 +83,6 @@ fn kill_players(
                 body.location = PlayerLocation::Airborne(respawn_point.position);
                 body.facing = respawn_point.facing;
             }
-            info!("Player {} died: {:?}", player.id, damage);
             died.send(PlayerDied {
                 revive,
                 player: player.clone(),
@@ -98,7 +94,6 @@ fn kill_players(
 
 pub(super) fn build(builder: &mut AppBuilder) {
     builder
-        .add_event::<PlayerDied>()
         .add_startup_system(setup_stage.system())
         .add_system_set(on_match_update().with_system(kill_players.system()));
 }

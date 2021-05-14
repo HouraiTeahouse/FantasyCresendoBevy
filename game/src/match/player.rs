@@ -1,4 +1,4 @@
-use super::{hitbox, MatchRule};
+use super::hitbox;
 use bevy::prelude::*;
 use fc_core::{
     character::{frame_data::*, state::*},
@@ -54,25 +54,6 @@ impl Default for PlayerDamage {
 impl PlayerDamage {
     pub const MIN: f32 = 0.0;
     pub const MAX: f32 = 999.99;
-
-    pub fn new(rule: &MatchRule, config: &PlayerConfig) -> Self {
-        match rule {
-            MatchRule::Score => Self::Score {
-                score: 0,
-                damage: config.default_damage,
-                default_damage: config.default_damage,
-            },
-            MatchRule::Stock(stocks) => Self::Stock {
-                stocks: *stocks,
-                damage: config.default_damage,
-                default_damage: config.default_damage,
-            },
-            MatchRule::Stamina(health) => Self::Stamina {
-                health: *health,
-                full_health: *health,
-            },
-        }
-    }
 
     pub fn knockback_scaling(&self) -> f32 {
         match self {

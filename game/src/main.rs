@@ -47,7 +47,7 @@ fn main() {
     .add_plugin(r#match::FcMatchPlugin)
     .insert_resource(Msaa { samples: 1 })
     .insert_resource(MatchConfig {
-        rule: MatchRule::Stock(3),
+        rule: r#match::rule::MatchRule::Stock(3),
         time: None,
         players: [
             Some(player::PlayerConfig {

@@ -19,26 +19,15 @@ mod hitbox;
 mod input;
 mod physics;
 pub mod player;
+pub mod rule;
 mod stage;
+mod events;
 
 pub const MAX_PLAYERS_PER_MATCH: usize = 4;
 
-#[derive(Clone, Deserialize, Serialize)]
-pub enum MatchRule {
-    Score,
-    Stamina(f32),
-    Stock(u8),
-}
-
-impl Default for MatchRule {
-    fn default() -> Self {
-        Self::Score
-    }
-}
-
 #[derive(Clone, Default, Deserialize, Serialize)]
 pub struct MatchConfig {
-    pub rule: MatchRule,
+    pub rule: rule::MatchRule,
     /// Optional max time for the match. If not none, the
     /// match will prematurely end if time reaches zero.
     pub time: Option<u32>,
@@ -73,20 +62,38 @@ pub struct MatchState {
 
 #[derive(Debug, Default)]
 pub struct MatchResult {
+    pub winner: rule::MatchWinner,
     pub players: [Option<PlayerResult>; MAX_PLAYERS_PER_MATCH],
 }
 
-#[derive(Debug)]
+impl MatchResult {
+    pub fn from_config(config: &MatchConfig) -> Self {
+        let mut players:[Option<PlayerResult>; MAX_PLAYERS_PER_MATCH] = Default::default();
+        for idx in 0..MAX_PLAYERS_PER_MATCH {
+            if config.players[idx].is_some() {
+                players[idx] = Some(PlayerResult::default());
+            }
+        }
+        Self { winner: rule::MatchWinner::Undecided, players }
+    }
+}
+
+#[derive(Debug, Default)]
 pub struct PlayerResult {}
 
 fn init_match(
     config: Res<MatchConfig>,
     spawn_points: Query<&SpawnPoint>,
+    mut result: ResMut<MatchResult>,
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     assert!(config.validate().is_ok());
+
+    // Clear any prior match results
+    *result = MatchResult::from_config(&config);
+
     let mut state = MatchState {
         time_remaining: config.time.clone(),
         ..Default::default()
@@ -109,7 +116,7 @@ fn init_match(
             let transform = Transform::from_translation(Vec3::from((spawn_point.position, 0.0)));
             let bundle = player::PlayerBundle {
                 player: Player { id: id as u8 },
-                damage: player::PlayerDamage::new(&config.rule, &cfg),
+                damage: config.rule.create_damage(&cfg),
                 body: player::PlayerBody {
                     ecb: player::EnvironmentCollisionBox {
                         left: 0.25,
@@ -143,14 +150,6 @@ fn cleanup_match(state: Res<MatchState>, mut commands: Commands) {
         }
     }
     commands.remove_resource::<MatchState>();
-}
-
-fn update_match_state(mut state: ResMut<MatchState>) {
-    if let Some(ref mut time) = state.time_remaining {
-        if *time > 0 {
-            *time -= 1;
-        }
-    }
 }
 
 fn sample_frames(mut query: Query<(&mut CharacterFrame, &mut PlayerState, &StateMachine)>) {
@@ -257,9 +256,10 @@ impl Plugin for FcMatchPlugin {
                     .with_system(sample_frames.system())
                     .with_system(input::sample_input.system())
                     .with_system(hitbox::update_hitboxes.system())
-                    .with_system(update_match_state.system())
                     .with_system(update_camera.system()),
             );
         stage::build(builder);
+        events::build(builder);
+        rule::build(builder);
     }
 }
