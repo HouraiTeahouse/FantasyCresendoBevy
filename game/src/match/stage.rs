@@ -1,7 +1,6 @@
 use super::on_match_update;
-use super::player::PlayerDamage;
+use super::player::{PlayerDamage, PlayerLocation, PlayerBody};
 use bevy::{math::*, prelude::*};
-use bevy_rapier3d::{physics::RigidBodyHandleComponent, rapier::dynamics::RigidBodySet};
 use fc_core::{
     geo::Bounds2D,
     player::{Facing, Player},
@@ -65,30 +64,22 @@ fn setup_stage(mut commands: Commands) {
 fn kill_players(
     blast_zones: Query<&BlastZone>,
     mut respawn_points: Query<&mut RespawnPoint>,
-    mut players: Query<(&mut PlayerDamage, &RigidBodyHandleComponent, &GlobalTransform, &Player)>,
+    mut players: Query<(&mut PlayerDamage, &mut PlayerBody, &Transform, &Player)>,
     mut died: EventWriter<PlayerDied>,
-    mut rigidbodies: ResMut<RigidBodySet>,
 ) {
-    let mut points: Vec<Mut<RespawnPoint>> = respawn_points.iter_mut().filter(|p| p.occupied_by.is_none()).collect();
+    let mut respawn_points: Vec<Mut<RespawnPoint>> = respawn_points.iter_mut().filter(|p| p.occupied_by.is_none()).collect();
     let bounds: Vec<&Bounds2D> = blast_zones.iter().map(|bz| &bz.0).collect();
-    for (mut damage, rb, global_transform, player) in players.iter_mut() {
-        let position = global_transform.translation.xy();
+    for (mut damage, mut body, transform, player) in players.iter_mut() {
+        let position = transform.translation.xy();
         if damage.is_alive() && !bounds.iter().any(|bounds| bounds.contains_point(position)) {
             damage.kill();
             let revive = damage.can_revive();
             if revive {
                 damage.revive();
-                if let Some(mut point) = points.pop() {
-                    if let Some(rb) = rigidbodies.get_mut(rb.handle()) {
-                        let mut position = rb.position().clone();
-                        position.translation.x = point.position.x;
-                        position.translation.y = point.position.y;
-                        rb.set_position(position, true);
-                    }
-                    point.occupied_by = Some(player.clone());
-                } else {
-                    panic!("Player died and no available respawn points!");
-                }
+                let mut respawn_point = respawn_points.pop().expect("Player died and no available respawn points!");
+                respawn_point.occupied_by = Some(player.clone());
+                body.location = PlayerLocation::Airborne(respawn_point.position);
+                body.facing = respawn_point.facing;
             }
             info!("Player {} died: {:?}", player.id, damage);
             died.send(PlayerDied {

@@ -6,11 +6,11 @@ use bevy::{
     render::camera::{Camera, PerspectiveProjection},
     window::Windows,
 };
-use bevy_rapier3d::{physics::RigidBodyHandleComponent, rapier::dynamics::RigidBodySet};
 use fc_core::{
     character::{frame_data::*, state::*},
     geo::*,
     input::*,
+    stage::SpawnPoint,
     player::{Player, PlayerId},
 };
 use serde::{Deserialize, Serialize};
@@ -81,6 +81,7 @@ pub struct PlayerResult {}
 
 fn init_match(
     config: Res<MatchConfig>,
+    spawn_points: Query<&SpawnPoint>,
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
@@ -95,30 +96,38 @@ fn init_match(
         depth: 1.0,
         ..Default::default()
     }));
+    // TODO(jamessliu): This will not work for a new match from a menu.
+    // Systems need to be properly ordered to ensure that spawn points are added before players 
+    // are spawned.
+    let mut spawn_points = spawn_points.iter();
     for (id, player_config) in config.players.iter().enumerate() {
         state.players[id] = player_config.as_ref().map(|cfg| {
             info!("Spawning player {}", id);
-            player::spawn_player(
-                &mut commands,
-                player::PlayerBundle {
-                    player: Player { id: id as u8 },
-                    damage: player::PlayerDamage::new(&config.rule, &cfg),
-                    input_source: cfg.input.clone(),
+            let spawn_point = spawn_points.next().expect("Stage does not have enough spawn points");
+            let transform = Transform::from_translation(Vec3::from((spawn_point.position, 0.0)));
+            let bundle = player::PlayerBundle {
+                player: Player { id: id as u8 },
+                damage: player::PlayerDamage::new(&config.rule, &cfg),
+                body: player::PlayerBody {
                     ecb: player::EnvironmentCollisionBox {
                         left: 0.25,
                         right: 0.25,
                         top: 0.5,
                         bottom: 0.5,
                     },
-                    pbr: PbrBundle {
-                        mesh: mesh.clone(),
-                        material: materials.add(player::get_player_color(id as PlayerId).into()),
-                        transform: Transform::from_xyz(id as f32 * 2.0 - 4.0, 0.5, 0.0),
-                        ..Default::default()
-                    },
+                    location: player::PlayerLocation::Airborne(transform.translation.xy()),
                     ..Default::default()
                 },
-            )
+                input_source: cfg.input.clone(),
+                pbr: PbrBundle {
+                    mesh: mesh.clone(),
+                    material: materials.add(player::get_player_color(id as PlayerId).into()),
+                    transform,
+                    ..Default::default()
+                },
+                ..Default::default()
+            };
+            player::spawn_player(&mut commands, bundle)
         });
     }
     commands.insert_resource(state);
@@ -151,29 +160,33 @@ fn sample_frames(mut query: Query<(&mut CharacterFrame, &mut PlayerState, &State
     }
 }
 
-fn move_players(
-    query: Query<(&RigidBodyHandleComponent, &PlayerInput)>,
-    mut rigidbodies: ResMut<RigidBodySet>,
-) {
-    for (component, input) in query.iter() {
-        if let Some(rb) = rigidbodies.get_mut(component.handle()) {
+fn move_players(mut players: Query<(&mut PlayerBody, &PlayerInput)>) {
+    for (mut body, input) in players.iter_mut() {
+        if let PlayerLocation::Airborne(ref mut pos) = body.location {
             let movement = &input.current.movement;
-            let mut transform = *rb.position();
-            transform.translation.x += f32::from(movement.x) * 0.1;
-            transform.translation.y += f32::from(movement.y) * 0.1;
-            rb.set_position(transform, true);
+            pos.x += f32::from(movement.x) * 0.1;
+            pos.y += f32::from(movement.y) * 0.1;
+        }
+    }
+}
+
+fn update_player_transforms(mut players: Query<(&mut Transform, &PlayerBody)>) {
+    for (mut transform, body) in players.iter_mut() {
+        match body.location {
+            PlayerLocation::Airborne(pos) => transform.translation = Vec3::from((pos, 0.0)),
+            _ => {}
         }
     }
 }
 
 fn update_camera(
     mut cameras: Query<(&mut Transform, &Camera, &PerspectiveProjection)>,
-    players: Query<(&GlobalTransform, &EnvironmentCollisionBox), With<Player>>,
+    players: Query<(&GlobalTransform, &PlayerBody), With<Player>>,
     windows: Res<Windows>,
 ) {
     let mut total_bounds: Option<Bounds2D> = None;
-    for (transform, ecb) in players.iter() {
-        let mut bounds = Bounds2D::from(ecb.clone());
+    for (transform, body) in players.iter() {
+        let mut bounds = Bounds2D::from(body.ecb.clone());
         bounds.center += transform.translation.xy();
         if let Some(ref mut total) = total_bounds {
             total.merge_with(bounds);
@@ -238,6 +251,7 @@ impl Plugin for FcMatchPlugin {
             .add_system_set(
                 on_match_update()
                     .with_system(move_players.system())
+                    .with_system(update_player_transforms.system())
                     .with_system(sample_frames.system())
                     .with_system(input::sample_input.system())
                     .with_system(hitbox::update_hitboxes.system())

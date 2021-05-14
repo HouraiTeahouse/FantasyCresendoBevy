@@ -1,4 +1,4 @@
-use crate::r#match::player::EnvironmentCollisionBox;
+use crate::r#match::player::PlayerBody;
 use bevy::{
     diagnostic::{Diagnostics, FrameTimeDiagnosticsPlugin},
     math::*,
@@ -55,12 +55,13 @@ fn update_fps_counter(diagnostics: Res<Diagnostics>, mut query: Query<&mut Text>
 }
 
 fn draw_player_debug(
-    query: Query<(&Transform, &EnvironmentCollisionBox), With<Player>>,
+    query: Query<(&Transform, &PlayerBody), With<Player>>,
     mut lines: ResMut<DebugLines>,
 ) {
     const SIZE: f32 = 0.25;
     let mut total_bounds: Option<Bounds2D> = None;
-    for (transform, ecb) in query.iter() {
+    for (transform, body) in query.iter() {
+        let ecb = &body.ecb;
         let mut center = transform.translation;
         center.z = 0.0;
         lines.cross_2d(center, SIZE, Color::GRAY);

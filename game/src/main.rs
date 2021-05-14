@@ -3,11 +3,6 @@ extern crate bitflags;
 
 #[windows_subsystem = "windows"]
 use bevy::prelude::*;
-use bevy_rapier3d::{
-    na::{Unit, Vector3},
-    physics::RapierPhysicsPlugin,
-    rapier::{dynamics::RigidBodyBuilder, geometry::ColliderBuilder},
-};
 use fc_core::input::*;
 use std::collections::HashMap;
 
@@ -47,7 +42,6 @@ fn main() {
     })
     .add_state(AppState::STARTUP)
     .add_plugins(DefaultPlugins)
-    .add_plugin(RapierPhysicsPlugin)
     .add_plugin(input::FcInputPlugin)
     .add_plugin(data::FcAssetsPlugin)
     .add_plugin(r#match::FcMatchPlugin)
@@ -117,11 +111,7 @@ fn setup(
             mesh: meshes.add(Mesh::from(shape::Plane { size: 500.0 })),
             material: materials.add(Color::rgb(0.3, 0.5, 0.3).into()),
             ..Default::default()
-        })
-        .insert(RigidBodyBuilder::new_static())
-        .insert(ColliderBuilder::halfspace(Unit::new_normalize(
-            Vector3::new(0.0, -1.0, 0.0),
-        )));
+        });
     // light
     commands.spawn_bundle(PointLightBundle {
         transform: Transform::from_xyz(4.0, 8.0, 4.0),

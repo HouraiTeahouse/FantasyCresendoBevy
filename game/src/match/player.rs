@@ -1,6 +1,5 @@
-use super::{hitbox, physics::PhysicsGroups, MatchRule};
+use super::{hitbox, MatchRule};
 use bevy::prelude::*;
-use bevy_rapier3d::rapier::{dynamics::*, geometry::*};
 use fc_core::{
     character::{frame_data::*, state::*},
     geo::*,
@@ -158,10 +157,31 @@ impl PlayerDamage {
     }
 }
 
+#[derive(Debug, Default)]
+pub struct PlayerBody {
+    pub mass: f32,
+    pub facing: Facing,
+    pub location: PlayerLocation,
+    pub velocity: Vec2,
+    pub ecb: EnvironmentCollisionBox,
+}
+
+#[derive(Debug)]
+pub enum PlayerLocation {
+    Airborne(Vec2),
+    Respawning(Entity),
+}
+
+impl Default for PlayerLocation {
+    fn default() -> Self {
+        Self::Airborne(Vec2::ZERO)
+    }
+}
+
 #[derive(Bundle, Default)]
 pub(super) struct PlayerBundle {
     pub player: Player,
-    pub ecb: EnvironmentCollisionBox,
+    pub body: PlayerBody,
     pub input: PlayerInput,
     pub damage: PlayerDamage,
     pub input_source: InputSource,
@@ -199,24 +219,8 @@ impl From<EnvironmentCollisionBox> for Bounds2D {
 
 pub(super) fn spawn_player(commands: &mut Commands, bundle: PlayerBundle) -> Entity {
     let player_id = bundle.player.id;
-    let translation = bundle.pbr.transform.translation;
     commands
         .spawn_bundle(bundle)
-        .insert(
-            RigidBodyBuilder::new_kinematic()
-                .translation(translation.x, translation.y, translation.y)
-                .lock_rotations()
-                .additional_mass(1.0),
-        )
-        .insert(
-            ColliderBuilder::capsule_y(1.0, 0.5)
-                .collision_groups(
-                    InteractionGroups::none()
-                        .with_groups(PhysicsGroups::PLAYER.bits())
-                        .with_mask((PhysicsGroups::PLAYER | PhysicsGroups::STAGE).bits()),
-                )
-                .sensor(true),
-        )
         .with_children(|parent| {
             for bundle in hitbox::create_player_hitboxes(player_id) {
                 parent.spawn_bundle(bundle);
