@@ -1,6 +1,6 @@
+use super::player::PlayerDamage;
 use bevy::prelude::*;
 use fc_core::player::Player;
-use super::player::PlayerDamage;
 
 pub(super) struct PlayerDied {
     pub revive: bool,

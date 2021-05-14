@@ -33,6 +33,35 @@ pub struct Surface {
 }
 
 impl Surface {
+    pub fn new(start: impl Into<SurfacePoint>, end: impl Into<SurfacePoint>) -> Self {
+        Self {
+            start: start.into(),
+            end: end.into(),
+            ..Default::default()
+        }
+    }
+
+    pub fn ceiling(start: impl Into<SurfacePoint>, end: impl Into<SurfacePoint>) -> Self {
+        Self {
+            flags: SurfaceFlags::CEILING,
+            ..Self::new(start, end)
+        }
+    }
+
+    pub fn floor(start: impl Into<SurfacePoint>, end: impl Into<SurfacePoint>) -> Self {
+        Self {
+            flags: SurfaceFlags::FLOOR,
+            ..Self::new(start, end)
+        }
+    }
+
+    pub fn wall(start: impl Into<SurfacePoint>, end: impl Into<SurfacePoint>) -> Self {
+        Self {
+            flags: SurfaceFlags::WALL,
+            ..Self::new(start, end)
+        }
+    }
+
     /// Gets a reference to the left most facing point on the surface.
     pub fn left(&self) -> &SurfacePoint {
         if self.start.point.x < self.end.point.x {
@@ -74,6 +103,15 @@ impl Surface {
 pub struct SurfacePoint {
     pub point: Vec2,
     pub grabbable: bool,
+}
+
+impl From<Vec2> for SurfacePoint {
+    fn from(point: Vec2) -> Self {
+        Self {
+            point,
+            ..Default::default()
+        }
+    }
 }
 
 bitflags! {

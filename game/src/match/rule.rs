@@ -1,11 +1,12 @@
-use bevy::{prelude::*, app::AppExit};
-use serde::{Deserialize, Serialize};
-use fc_core::player::Player;
 use super::{
-    on_match_update, MatchConfig, MatchResult, MatchState,
     events::PlayerDied,
-    player::{PlayerConfig, PlayerDamage}
+    on_match_update,
+    player::{PlayerConfig, PlayerDamage},
+    MatchConfig, MatchResult, MatchState,
 };
+use bevy::{app::AppExit, prelude::*};
+use fc_core::player::Player;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone)]
 pub enum MatchWinner {
@@ -16,7 +17,7 @@ pub enum MatchWinner {
     /// A singular player has won.
     Player(Player),
     /// A team of players has won.
-    Team
+    Team,
 }
 
 impl Default for MatchWinner {
@@ -59,7 +60,11 @@ impl MatchRule {
         }
     }
 
-    pub(self) fn find_winner<'a>(&self, query: impl Iterator<Item=(&'a Player, &'a PlayerDamage)>, force: bool) -> MatchWinner {
+    pub(self) fn find_winner<'a>(
+        &self,
+        query: impl Iterator<Item = (&'a Player, &'a PlayerDamage)>,
+        force: bool,
+    ) -> MatchWinner {
         let winner = match self {
             Self::Score => Self::find_score_winner(query),
             Self::Stock(_) => Self::find_last_player_standing(query),
@@ -76,7 +81,9 @@ impl MatchRule {
         }
     }
 
-    fn find_score_winner<'a>(query: impl Iterator<Item=(&'a Player, &'a PlayerDamage)>) -> MatchWinner {
+    fn find_score_winner<'a>(
+        query: impl Iterator<Item = (&'a Player, &'a PlayerDamage)>,
+    ) -> MatchWinner {
         let mut winner = MatchWinner::Undecided;
         let mut max_score = i16::MIN;
         for (player, damage) in query {
@@ -92,7 +99,9 @@ impl MatchRule {
         winner
     }
 
-    fn find_last_player_standing<'a>(query: impl Iterator<Item=(&'a Player, &'a PlayerDamage)>) -> MatchWinner {
+    fn find_last_player_standing<'a>(
+        query: impl Iterator<Item = (&'a Player, &'a PlayerDamage)>,
+    ) -> MatchWinner {
         let mut winner = MatchWinner::Undecided;
         for (player, damage) in query {
             if damage.is_alive() {
@@ -110,7 +119,7 @@ fn update_match_state(
     config: Res<MatchConfig>,
     mut state: ResMut<MatchState>,
     mut results: ResMut<MatchResult>,
-    players: Query<(&Player, &PlayerDamage)>
+    players: Query<(&Player, &PlayerDamage)>,
 ) {
     if let Some(ref mut time) = state.time_remaining {
         if *time > 0 {
@@ -125,7 +134,7 @@ fn on_player_died(
     mut events: EventReader<PlayerDied>,
     config: Res<MatchConfig>,
     mut results: ResMut<MatchResult>,
-    players: Query<(&Player, &PlayerDamage)>
+    players: Query<(&Player, &PlayerDamage)>,
 ) {
     let mut count = 0_u32;
     for event in events.iter() {
@@ -153,5 +162,6 @@ pub(super) fn build(builder: &mut AppBuilder) {
         on_match_update()
             .with_system(update_match_state.system())
             .with_system(finish_match.system())
-            .with_system(on_player_died.system()));
+            .with_system(on_player_died.system()),
+    );
 }

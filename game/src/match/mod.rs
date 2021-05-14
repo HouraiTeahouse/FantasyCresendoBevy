@@ -15,13 +15,13 @@ use fc_core::{
 };
 use serde::{Deserialize, Serialize};
 
+mod events;
 mod hitbox;
 mod input;
 mod physics;
 pub mod player;
 pub mod rule;
 mod stage;
-mod events;
 
 pub const MAX_PLAYERS_PER_MATCH: usize = 4;
 
@@ -68,13 +68,16 @@ pub struct MatchResult {
 
 impl MatchResult {
     pub fn from_config(config: &MatchConfig) -> Self {
-        let mut players:[Option<PlayerResult>; MAX_PLAYERS_PER_MATCH] = Default::default();
+        let mut players: [Option<PlayerResult>; MAX_PLAYERS_PER_MATCH] = Default::default();
         for idx in 0..MAX_PLAYERS_PER_MATCH {
             if config.players[idx].is_some() {
                 players[idx] = Some(PlayerResult::default());
             }
         }
-        Self { winner: rule::MatchWinner::Undecided, players }
+        Self {
+            winner: rule::MatchWinner::Undecided,
+            players,
+        }
     }
 }
 

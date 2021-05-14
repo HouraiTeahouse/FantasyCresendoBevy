@@ -7,7 +7,7 @@ use bevy::{math::*, prelude::*};
 use fc_core::{
     geo::Bounds2D,
     player::{Facing, Player},
-    stage::{BlastZone, RespawnPoint, SpawnPoint},
+    stage::{BlastZone, RespawnPoint, SpawnPoint, Surface, SurfacePoint},
 };
 
 fn setup_stage(mut commands: Commands) {
@@ -33,6 +33,22 @@ fn setup_stage(mut commands: Commands) {
         position: Vec2::new(3.0, 0.0),
         facing: Facing::Right,
     });
+
+    commands
+        .spawn()
+        .insert(Surface::floor(Vec2::new(-10.0, 0.0), Vec2::new(0.0, -1.0)));
+    commands
+        .spawn()
+        .insert(Surface::floor(Vec2::new(0.0, -1.0), Vec2::new(10.0, 0.0)));
+    commands
+        .spawn()
+        .insert(Surface::floor(Vec2::new(-7.0, 3.0), Vec2::new(-3.0, 3.0)));
+    commands
+        .spawn()
+        .insert(Surface::floor(Vec2::new(3.0, 3.0), Vec2::new(7.0, 3.0)));
+    commands
+        .spawn()
+        .insert(Surface::floor(Vec2::new(-1.5, 6.0), Vec2::new(1.5, 6.0)));
 
     // Add respawn points.
     commands.spawn().insert(RespawnPoint {

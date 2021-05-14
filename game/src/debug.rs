@@ -8,7 +8,7 @@ pub use fc_core::{debug::DebugLines, geo::*};
 use fc_core::{
     debug::DebugLinesPlugin,
     player::Player,
-    stage::{BlastZone, RespawnPoint, SpawnPoint},
+    stage::{BlastZone, RespawnPoint, SpawnPoint, Surface},
 };
 
 const CROSS_SIZE: f32 = 0.25;
@@ -99,6 +99,7 @@ fn draw_stage_debug(
     spawn: Query<&SpawnPoint>,
     respawn: Query<&RespawnPoint>,
     blast_zones: Query<&BlastZone>,
+    surfaces: Query<&Surface>,
     mut lines: ResMut<DebugLines>,
 ) {
     for point in spawn.iter() {
@@ -110,10 +111,15 @@ fn draw_stage_debug(
         } else {
             Color::RED
         };
-        lines.cross_2d(Vec3::from((point.position, 0.0)), CROSS_SIZE, color);
+        lines.cross_2d(point.position.extend(0.0), CROSS_SIZE, color);
     }
     for blast_zone in blast_zones.iter() {
         lines.bounds_2d(blast_zone.0, Color::MAROON);
+    }
+    for surface in surfaces.iter() {
+        let start = surface.start.point.extend(0.0);
+        let end = surface.end.point.extend(0.0);
+        lines.line_colored(start, end, Color::WHITE);
     }
 }
 
