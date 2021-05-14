@@ -1,4 +1,4 @@
-use crate::r#match::player::PlayerBody;
+use crate::r#match::physics::Body;
 use bevy::{
     diagnostic::{Diagnostics, FrameTimeDiagnosticsPlugin},
     math::*,
@@ -55,34 +55,31 @@ fn update_fps_counter(diagnostics: Res<Diagnostics>, mut query: Query<&mut Text>
 }
 
 fn draw_player_debug(
-    query: Query<(&Transform, &PlayerBody), With<Player>>,
+    query: Query<(&Transform, &Body), With<Player>>,
     mut lines: ResMut<DebugLines>,
 ) {
     const SIZE: f32 = 0.25;
     let mut total_bounds: Option<Bounds2D> = None;
     for (transform, body) in query.iter() {
-        let ecb = &body.ecb;
+        let mut ecb = body.ecb.clone();
         let mut center = transform.translation;
         center.z = 0.0;
         lines.cross_2d(center, SIZE, Color::GRAY);
 
-        let mut bounds = Bounds2D::from(ecb.clone());
-        bounds.center += center.xy();
-        bounds.center.y += ecb.bottom;
+        ecb.translate(center.xy() - ecb.bottom());
 
         if let Some(ref mut total) = total_bounds {
-            total.merge_with(bounds);
+            total.merge_with(ecb.0);
         } else {
-            total_bounds = Some(bounds);
+            total_bounds = Some(ecb.0);
         }
 
-        let ecb_center = center + Vec3::new(0.0, ecb.bottom, 0.0);
         lines.polygon(
             [
-                center,
-                ecb_center + Vec3::new(-ecb.left, 0.0, 0.0),
-                ecb_center + Vec3::new(0.0, ecb.top, 0.0),
-                ecb_center + Vec3::new(ecb.right, 0.0, 0.0),
+                ecb.bottom().extend(0.0),
+                ecb.left().extend(0.0),
+                ecb.top().extend(0.0),
+                ecb.right().extend(0.0),
             ]
             .iter()
             .cloned(),

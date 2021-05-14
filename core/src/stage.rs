@@ -1,4 +1,4 @@
-use crate::geo::Bounds2D;
+use crate::geo::*;
 use crate::player::{Facing, Player};
 use bevy::{math::Vec2, reflect::TypeUuid};
 use serde::{Deserialize, Serialize};
@@ -90,6 +90,10 @@ impl Surface {
 
     pub fn is_floor(&self) -> bool {
         self.flags.contains(SurfaceFlags::FLOOR)
+    }
+
+    pub fn as_segment(&self) -> LineSegment2D {
+        LineSegment2D::new(self.start.point, self.end.point)
     }
 
     /// Computes a position along the surface.

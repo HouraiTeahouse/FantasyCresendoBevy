@@ -1,4 +1,4 @@
-use super::hitbox;
+use super::{hitbox, physics};
 use bevy::prelude::*;
 use fc_core::{
     character::{frame_data::*, state::*},
@@ -138,38 +138,19 @@ impl PlayerDamage {
     }
 }
 
-#[derive(Debug, Default)]
-pub struct PlayerBody {
-    pub mass: f32,
-    pub facing: Facing,
-    pub location: PlayerLocation,
-    pub velocity: Vec2,
-    pub ecb: EnvironmentCollisionBox,
-}
-
-#[derive(Debug)]
-pub enum PlayerLocation {
-    Airborne(Vec2),
-    Respawning(Entity),
-}
-
-impl Default for PlayerLocation {
-    fn default() -> Self {
-        Self::Airborne(Vec2::ZERO)
-    }
-}
-
 #[derive(Bundle, Default)]
 pub(super) struct PlayerBundle {
     pub player: Player,
-    pub body: PlayerBody,
+    pub transform: Transform,
+    pub global_transform: GlobalTransform,
+    pub body: physics::Body,
     pub input: PlayerInput,
     pub damage: PlayerDamage,
     pub input_source: InputSource,
     #[bundle]
     pub character: CharacterBundle,
-    #[bundle]
-    pub pbr: PbrBundle,
+    // #[bundle]
+    // pub pbr: PbrBundle,
 }
 
 #[derive(Bundle, Default)]
@@ -177,25 +158,6 @@ pub(super) struct CharacterBundle {
     pub state: PlayerState,
     pub state_machine: StateMachine,
     pub frame: CharacterFrame,
-}
-
-#[derive(Debug, Default, Clone)]
-pub struct EnvironmentCollisionBox {
-    pub left: f32,
-    pub right: f32,
-    pub top: f32,
-    pub bottom: f32,
-}
-
-impl From<EnvironmentCollisionBox> for Bounds2D {
-    fn from(value: EnvironmentCollisionBox) -> Self {
-        Self::from(Rect::<f32> {
-            left: -value.left,
-            right: value.right,
-            top: -value.top,
-            bottom: value.bottom,
-        })
-    }
 }
 
 pub(super) fn spawn_player(commands: &mut Commands, bundle: PlayerBundle) -> Entity {

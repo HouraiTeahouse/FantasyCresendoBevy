@@ -1,71 +1,18 @@
+use super::point::Point;
 use bevy::math::*;
-use std::ops::{Add, Mul, Sub};
 
 pub type Bounds1D = Bounds<f32>;
 pub type Bounds2D = Bounds<Vec2>;
 pub type Bounds3D = Bounds<Vec3>;
 pub type Bounds4D = Bounds<Vec4>;
 
-pub trait Boundable:
-    Add<Output = Self> + Sub<Output = Self> + Mul<f32, Output = Self> + Copy
-{
-    fn min(self, other: Self) -> Self;
-    fn max(self, other: Self) -> Self;
-    fn abs(self) -> Self;
-    fn cmple(self, other: Self) -> bool;
-}
-
-impl Boundable for f32 {
-    fn min(self, other: Self) -> Self {
-        f32::min(self, other)
-    }
-
-    fn max(self, other: Self) -> Self {
-        f32::max(self, other)
-    }
-
-    fn abs(self) -> Self {
-        f32::abs(self)
-    }
-
-    fn cmple(self, other: Self) -> bool {
-        self <= other
-    }
-}
-
-macro_rules! boundable {
-    ($type:ty) => {
-        impl Boundable for $type {
-            fn min(self, other: Self) -> Self {
-                <$type>::min(self, other)
-            }
-
-            fn max(self, other: Self) -> Self {
-                <$type>::max(self, other)
-            }
-
-            fn abs(self) -> Self {
-                <$type>::abs(self)
-            }
-
-            fn cmple(self, other: Self) -> bool {
-                <$type>::cmple(self, other).all()
-            }
-        }
-    };
-}
-
-boundable!(Vec2);
-boundable!(Vec3);
-boundable!(Vec4);
-
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
+#[derive(Default, Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub struct Bounds<T> {
     pub center: T,
     pub extents: T,
 }
 
-impl<T: Boundable> Bounds<T> {
+impl<T: Point> Bounds<T> {
     pub fn new(center: T, extents: T) -> Self {
         Self {
             center: center,
@@ -74,11 +21,11 @@ impl<T: Boundable> Bounds<T> {
     }
 
     /// Gets the highest value in the bounds.
-    pub fn max(&self) -> <T as Add>::Output {
+    pub fn max(&self) -> T {
         self.center + self.extents
     }
 
-    pub fn min(&self) -> <T as Sub>::Output {
+    pub fn min(&self) -> T {
         self.center - self.extents
     }
 
@@ -105,7 +52,7 @@ impl<T: Boundable> Bounds<T> {
     }
 
     /// Gets the full size of the bounds.
-    pub fn size(&self) -> <T as Mul<f32>>::Output {
+    pub fn size(&self) -> T {
         self.extents * 2.0
     }
 

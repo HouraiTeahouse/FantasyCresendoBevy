@@ -10,15 +10,15 @@ use fc_core::{
     character::{frame_data::*, state::*},
     geo::*,
     input::*,
-    player::{Player, PlayerId},
-    stage::SpawnPoint,
+    player::Player,
+    stage::*,
 };
 use serde::{Deserialize, Serialize};
 
 mod events;
 mod hitbox;
 mod input;
-mod physics;
+pub mod physics;
 pub mod player;
 pub mod rule;
 mod stage;
@@ -120,23 +120,22 @@ fn init_match(
             let bundle = player::PlayerBundle {
                 player: Player { id: id as u8 },
                 damage: config.rule.create_damage(&cfg),
-                body: player::PlayerBody {
-                    ecb: player::EnvironmentCollisionBox {
-                        left: 0.25,
-                        right: 0.25,
-                        top: 0.5,
-                        bottom: 0.5,
-                    },
-                    location: player::PlayerLocation::Airborne(transform.translation.xy()),
+                body: physics::Body {
+                    ecb: physics::EnvironmentCollisionBox(Bounds2D {
+                        center: Vec2::new(0.0, 0.5),
+                        extents: Vec2::new(0.25, 0.5),
+                    }),
+                    location: physics::Location::Airborne(transform.translation.xy()),
                     ..Default::default()
                 },
+                transform,
                 input_source: cfg.input.clone(),
-                pbr: PbrBundle {
-                    mesh: mesh.clone(),
-                    material: materials.add(player::get_player_color(id as PlayerId).into()),
-                    transform,
-                    ..Default::default()
-                },
+                // pbr: PbrBundle {
+                //     mesh: mesh.clone(),
+                //     material: materials.add(player::get_player_color(id as PlayerId).into()),
+                //     transform,
+                //     ..Default::default()
+                // },
                 ..Default::default()
             };
             player::spawn_player(&mut commands, bundle)
@@ -164,20 +163,41 @@ fn sample_frames(mut query: Query<(&mut CharacterFrame, &mut PlayerState, &State
     }
 }
 
-fn move_players(mut players: Query<(&mut PlayerBody, &PlayerInput)>) {
+fn move_players(
+    mut players: Query<(&mut physics::Body, &PlayerInput)>,
+    surfaces: Query<(Entity, &Surface)>,
+) {
     for (mut body, input) in players.iter_mut() {
-        if let PlayerLocation::Airborne(ref mut pos) = body.location {
+        if let physics::Location::Airborne(ref mut pos) = body.location {
+            let before = pos.clone();
             let movement = &input.current.movement;
             pos.x += f32::from(movement.x) * 0.1;
             pos.y += f32::from(movement.y) * 0.1;
+            if let Some(surface) =
+                player_stage_collision(LineSegment2D::new(before, pos.clone()), &surfaces)
+            {
+                info!("{:?}", surface);
+            }
         }
     }
 }
 
-fn update_player_transforms(mut players: Query<(&mut Transform, &PlayerBody)>) {
+fn player_stage_collision(
+    movement: LineSegment2D,
+    surfaces: &Query<(Entity, &Surface)>,
+) -> Option<Surface> {
+    for (entity, surface) in surfaces.iter() {
+        if movement.intersects(surface.as_segment()) {
+            return Some(surface.clone());
+        }
+    }
+    None
+}
+
+fn update_player_transforms(mut players: Query<(&mut Transform, &physics::Body)>) {
     for (mut transform, body) in players.iter_mut() {
         match body.location {
-            PlayerLocation::Airborne(pos) => transform.translation = Vec3::from((pos, 0.0)),
+            physics::Location::Airborne(pos) => transform.translation = Vec3::from((pos, 0.0)),
             _ => {}
         }
     }
@@ -185,7 +205,7 @@ fn update_player_transforms(mut players: Query<(&mut Transform, &PlayerBody)>) {
 
 fn update_camera(
     mut cameras: Query<(&mut Transform, &Camera, &PerspectiveProjection)>,
-    players: Query<(&GlobalTransform, &PlayerBody), With<Player>>,
+    players: Query<(&GlobalTransform, &physics::Body), With<Player>>,
     windows: Res<Windows>,
 ) {
     let mut total_bounds: Option<Bounds2D> = None;

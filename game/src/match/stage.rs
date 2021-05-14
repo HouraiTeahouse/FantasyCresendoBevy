@@ -1,7 +1,8 @@
 use super::on_match_update;
 use super::{
     events::PlayerDied,
-    player::{PlayerBody, PlayerDamage, PlayerLocation},
+    physics::{Body, Location},
+    player::PlayerDamage,
 };
 use bevy::{math::*, prelude::*};
 use fc_core::{
@@ -77,7 +78,7 @@ fn setup_stage(mut commands: Commands) {
 fn kill_players(
     blast_zones: Query<&BlastZone>,
     mut respawn_points: Query<&mut RespawnPoint>,
-    mut players: Query<(&mut PlayerDamage, &mut PlayerBody, &Transform, &Player)>,
+    mut players: Query<(&mut PlayerDamage, &mut Body, &Transform, &Player)>,
     mut died: EventWriter<PlayerDied>,
 ) {
     let mut respawn_points: Vec<Mut<RespawnPoint>> = respawn_points
@@ -96,7 +97,7 @@ fn kill_players(
                     .pop()
                     .expect("Player died and no available respawn points!");
                 respawn_point.occupied_by = Some(player.clone());
-                body.location = PlayerLocation::Airborne(respawn_point.position);
+                body.location = Location::Airborne(respawn_point.position);
                 body.facing = respawn_point.facing;
             }
             died.send(PlayerDied {
