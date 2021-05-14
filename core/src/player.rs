@@ -5,7 +5,7 @@ pub struct Player {
     pub id: PlayerId,
 }
 
-#[derive( Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum Facing {
     Left = 0,
     Right = 1,

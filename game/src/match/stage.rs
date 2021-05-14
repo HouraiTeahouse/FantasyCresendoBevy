@@ -1,5 +1,5 @@
 use super::on_match_update;
-use super::player::{PlayerDamage, PlayerLocation, PlayerBody};
+use super::player::{PlayerBody, PlayerDamage, PlayerLocation};
 use bevy::{math::*, prelude::*};
 use fc_core::{
     geo::Bounds2D,
@@ -67,7 +67,10 @@ fn kill_players(
     mut players: Query<(&mut PlayerDamage, &mut PlayerBody, &Transform, &Player)>,
     mut died: EventWriter<PlayerDied>,
 ) {
-    let mut respawn_points: Vec<Mut<RespawnPoint>> = respawn_points.iter_mut().filter(|p| p.occupied_by.is_none()).collect();
+    let mut respawn_points: Vec<Mut<RespawnPoint>> = respawn_points
+        .iter_mut()
+        .filter(|p| p.occupied_by.is_none())
+        .collect();
     let bounds: Vec<&Bounds2D> = blast_zones.iter().map(|bz| &bz.0).collect();
     for (mut damage, mut body, transform, player) in players.iter_mut() {
         let position = transform.translation.xy();
@@ -76,7 +79,9 @@ fn kill_players(
             let revive = damage.can_revive();
             if revive {
                 damage.revive();
-                let mut respawn_point = respawn_points.pop().expect("Player died and no available respawn points!");
+                let mut respawn_point = respawn_points
+                    .pop()
+                    .expect("Player died and no available respawn points!");
                 respawn_point.occupied_by = Some(player.clone());
                 body.location = PlayerLocation::Airborne(respawn_point.position);
                 body.facing = respawn_point.facing;

@@ -10,8 +10,8 @@ use fc_core::{
     character::{frame_data::*, state::*},
     geo::*,
     input::*,
-    stage::SpawnPoint,
     player::{Player, PlayerId},
+    stage::SpawnPoint,
 };
 use serde::{Deserialize, Serialize};
 
@@ -97,13 +97,15 @@ fn init_match(
         ..Default::default()
     }));
     // TODO(jamessliu): This will not work for a new match from a menu.
-    // Systems need to be properly ordered to ensure that spawn points are added before players 
+    // Systems need to be properly ordered to ensure that spawn points are added before players
     // are spawned.
     let mut spawn_points = spawn_points.iter();
     for (id, player_config) in config.players.iter().enumerate() {
         state.players[id] = player_config.as_ref().map(|cfg| {
             info!("Spawning player {}", id);
-            let spawn_point = spawn_points.next().expect("Stage does not have enough spawn points");
+            let spawn_point = spawn_points
+                .next()
+                .expect("Stage does not have enough spawn points");
             let transform = Transform::from_translation(Vec3::from((spawn_point.position, 0.0)));
             let bundle = player::PlayerBundle {
                 player: Player { id: id as u8 },
