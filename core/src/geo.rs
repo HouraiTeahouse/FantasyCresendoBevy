@@ -1,10 +1,63 @@
 use bevy::math::*;
-use std::cmp::PartialOrd;
 use std::ops::{Add, Mul, Sub};
 
 pub type Bounds1D = Bounds<f32>;
 pub type Bounds2D = Bounds<Vec2>;
 pub type Bounds3D = Bounds<Vec3>;
+pub type Bounds4D = Bounds<Vec4>;
+
+pub trait Boundable:
+    Add<Output = Self> + Sub<Output = Self> + Mul<f32, Output = Self> + Copy
+{
+    fn min(self, other: Self) -> Self;
+    fn max(self, other: Self) -> Self;
+    fn abs(self) -> Self;
+    fn cmple(self, other: Self) -> bool;
+}
+
+impl Boundable for f32 {
+    fn min(self, other: Self) -> Self {
+        f32::min(self, other)
+    }
+
+    fn max(self, other: Self) -> Self {
+        f32::max(self, other)
+    }
+
+    fn abs(self) -> Self {
+        f32::abs(self)
+    }
+
+    fn cmple(self, other: Self) -> bool {
+        self <= other
+    }
+}
+
+macro_rules! boundable {
+    ($type:ty) => {
+        impl Boundable for $type {
+            fn min(self, other: Self) -> Self {
+                <$type>::min(self, other)
+            }
+
+            fn max(self, other: Self) -> Self {
+                <$type>::max(self, other)
+            }
+
+            fn abs(self) -> Self {
+                <$type>::abs(self)
+            }
+
+            fn cmple(self, other: Self) -> bool {
+                <$type>::cmple(self, other).all()
+            }
+        }
+    };
+}
+
+boundable!(Vec2);
+boundable!(Vec3);
+boundable!(Vec4);
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub struct Bounds<T> {
@@ -12,123 +65,71 @@ pub struct Bounds<T> {
     pub extents: T,
 }
 
-impl<T: Copy> Bounds<T> {
+impl<T: Boundable> Bounds<T> {
     pub fn new(center: T, extents: T) -> Self {
-        Self { center, extents }
+        Self {
+            center: center,
+            extents: extents,
+        }
     }
-}
 
-impl<T: Add<Output = T> + Clone> Bounds<T> {
     /// Gets the highest value in the bounds.
     pub fn max(&self) -> <T as Add>::Output {
-        self.center.clone() + self.extents.clone()
+        self.center + self.extents
     }
 
-    pub fn expand(&mut self, size: T) {
-        self.extents = self.extents.clone() + size.clone();
-    }
-}
-
-impl<T: Sub<Output = T> + Clone> Bounds<T> {
     pub fn min(&self) -> <T as Sub>::Output {
-        self.center.clone() - self.extents.clone()
+        self.center - self.extents
     }
 
-    pub fn shrink(&mut self, size: T) {
-        self.extents = self.extents.clone() - size.clone();
-    }
-}
-
-impl<T: Mul<f32> + Clone> Bounds<T> {
-    /// Gets the full size of the bounds.
-    pub fn size(&self) -> <T as Mul<f32>>::Output {
-        self.extents.clone() * 2.0
-    }
-}
-
-impl<T: Add<Output = T> + Sub<Output = T> + PartialOrd + Clone> Bounds<T> {
-    /// Checks if the range contains the point.
-    pub fn contains_point(&self, check: T) -> bool {
-        self.max() >= check && self.min() <= check
+    pub fn set_min_max(&mut self, min: T, max: T) {
+        self.center = (min + max) * 0.5;
+        self.extents = (max - self.center).abs();
     }
 
-    /// Checks if the target bounds is entirely contained within the current bound.
-    pub fn contains_bounds(&self, other: Self) -> bool {
-        self.max() >= other.max() && self.min() <= other.min()
-    }
-
-    /// Checks if two bounds intersect.
-    pub fn intersects(&self, other: &Self) -> bool {
-        let combo = self.extents.clone() + other.extents.clone();
-        let diff = if self.center > other.center {
-            self.center.clone() - other.center.clone()
-        } else {
-            other.center.clone() - self.center.clone()
-        };
-        combo >= diff
-    }
-}
-
-impl<T: Add<Output = T> + Sub<Output = T> + Mul<f32, Output = T> + Copy + PartialOrd> Bounds<T> {
-    /// Gets the full size of the bounds.
-    pub fn from_min_max(min: T, max: T) -> Self {
-        let center = (min + max) * 0.5;
-        let size = if min < max { max - min } else { min - max };
-        Self::new(center, size * 0.5)
-    }
-}
-
-impl Bounds1D {
-    pub fn encapsulate(&mut self, value: f32) {
-        let max = self.max();
-        let min = self.min();
-        let delta = if max < value {
-            (value - max) / 2.0
-        } else if min > value {
-            (min - value) / 2.0
-        } else {
-            return;
-        };
-        self.center += delta;
-        self.extents += delta;
-    }
-}
-
-impl Bounds2D {
-    pub fn encapsulate(&mut self, value: Vec2) {
-        let (mut x, mut y) = self.decompose();
-        x.encapsulate(value.x);
-        y.encapsulate(value.y);
-        *self = Self::from((x, y));
-    }
-
-    pub fn decompose(self) -> (Bounds1D, Bounds1D) {
-        (
-            Bounds1D::new(self.center.x, self.extents.x),
-            Bounds1D::new(self.center.y, self.extents.y),
-        )
+    pub fn encapsulate(&mut self, value: T) {
+        self.set_min_max(self.min().min(value), self.max().max(value));
     }
 
     /// Merges another bounds into the current one.
     pub fn merge_with(&mut self, other: Self) {
-        let (mut min_x, mut min_y) = self.min().into();
-        let (mut max_x, mut max_y) = self.max().into();
-        let tests = [other.max(), other.min()];
-        for test in tests.iter() {
-            if test.x > max_x {
-                max_x = test.x;
-            }
-            if test.x < min_x {
-                min_x = test.x;
-            }
-            if test.y > max_y {
-                max_y = test.y;
-            }
-            if test.y < min_y {
-                min_y = test.y;
-            }
-        }
-        *self = Self::from_min_max(Vec2::new(min_x, min_y), Vec2::new(max_x, max_y));
+        self.set_min_max(self.min().min(other.min()), self.max().max(other.max()))
+    }
+
+    pub fn expand(&mut self, size: T) {
+        self.extents = self.extents + size;
+    }
+
+    pub fn shrink(&mut self, size: T) {
+        self.extents = self.extents - size;
+    }
+
+    /// Gets the full size of the bounds.
+    pub fn size(&self) -> <T as Mul<f32>>::Output {
+        self.extents * 2.0
+    }
+
+    /// Gets the full size of the bounds.
+    pub fn from_min_max(min: T, max: T) -> Self {
+        let center = (min + max) * 0.5;
+        let size = (max - center).abs();
+        Self::new(center, size)
+    }
+
+    /// Checks if the range contains the point.
+    pub fn contains_point(&self, check: T) -> bool {
+        (self.center - check).abs().cmple(self.extents)
+    }
+
+    /// Checks if the target bounds is entirely contained within the current bound.
+    pub fn contains_bounds(&self, other: Self) -> bool {
+        self.max().cmple(other.max()) && other.min().cmple(self.min())
+    }
+
+    /// Checks if two bounds intersect.
+    /// Returns true if either is entirely inside of the other.
+    pub fn intersects(&self, other: &Self) -> bool {
+        self.min().cmple(other.max()) && other.min().cmple(self.max())
     }
 }
 
@@ -160,64 +161,6 @@ impl From<Rect<f32>> for Bounds2D {
             Bounds1D::from_min_max(value.left, value.right),
             Bounds1D::from_min_max(value.top, value.bottom),
         ))
-    }
-}
-
-impl Bounds3D {
-    pub fn encapsulate(&mut self, value: Vec3) {
-        let (mut x, mut y, mut z) = self.decompose();
-        x.encapsulate(value.x);
-        y.encapsulate(value.y);
-        z.encapsulate(value.z);
-        *self = Self::from((x, y, z));
-    }
-
-    pub fn decompose(self) -> (Bounds1D, Bounds1D, Bounds1D) {
-        (
-            Bounds1D::new(self.center.x, self.extents.x),
-            Bounds1D::new(self.center.y, self.extents.y),
-            Bounds1D::new(self.center.z, self.extents.z),
-        )
-    }
-
-    /// Merges another bounds into the current one.
-    pub fn merge_with(&mut self, other: Self) {
-        let (mut min_x, mut min_y, mut min_z) = self.min().into();
-        let (mut max_x, mut max_y, mut max_z) = self.max().into();
-        let tests = [other.max(), other.min()];
-        for test in tests.iter() {
-            if test.x > max_x {
-                max_x = test.x;
-            }
-            if test.x < min_x {
-                min_x = test.x;
-            }
-            if test.y > max_y {
-                max_y = test.y;
-            }
-            if test.y < min_y {
-                min_y = test.y;
-            }
-            if test.z > max_z {
-                max_z = test.z;
-            }
-            if test.z < min_z {
-                min_z = test.z;
-            }
-        }
-        *self = Self::from_min_max(
-            Vec3::new(min_x, min_y, min_z),
-            Vec3::new(max_x, max_y, max_z),
-        );
-    }
-}
-
-impl From<(Bounds1D, Bounds1D, Bounds1D)> for Bounds3D {
-    fn from(value: (Bounds1D, Bounds1D, Bounds1D)) -> Self {
-        Self {
-            center: Vec3::new(value.0.center, value.1.center, value.2.center),
-            extents: Vec3::new(value.0.extents, value.1.extents, value.2.extents),
-        }
     }
 }
 
