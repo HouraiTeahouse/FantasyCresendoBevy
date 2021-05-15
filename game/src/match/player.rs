@@ -2,7 +2,6 @@ use super::{hitbox, physics};
 use bevy::prelude::*;
 use fc_core::{
     character::{frame_data::*, state::*},
-    geo::*,
     input::*,
     player::*,
 };
@@ -21,6 +20,27 @@ pub struct PlayerConfig {
     /// The default damage the player starts with upon respawning.
     #[serde(skip)]
     pub input: InputSource,
+}
+
+#[derive(Default, Debug, Clone)]
+pub(super) struct PlayerMovement {
+    pub jump_count: usize,
+    pub jump_power: Vec<f32>,
+    pub short_jump_power: f32,
+}
+
+impl PlayerMovement {
+    pub fn next_jump_power(&mut self) -> Option<f32> {
+        let power = self.jump_power.get(self.jump_count);
+        if power.is_some() {
+            self.jump_count += 1;
+        }
+        power.cloned()
+    }
+
+    pub fn reset_jumps(&mut self) {
+        self.jump_count = 0;
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -144,6 +164,7 @@ pub(super) struct PlayerBundle {
     pub transform: Transform,
     pub global_transform: GlobalTransform,
     pub body: physics::Body,
+    pub movement: PlayerMovement,
     pub input: PlayerInput,
     pub damage: PlayerDamage,
     pub input_source: InputSource,

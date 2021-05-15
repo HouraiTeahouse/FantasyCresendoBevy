@@ -105,6 +105,7 @@ fn kill_players(
                     point: respawn_entity,
                     remaining_time: FrameTimer::new(MAX_RESPAWN_FRAMES),
                 };
+                body.velocity = Vec2::ZERO;
                 body.facing = respawn_point.facing;
             }
             died.send(PlayerDied {

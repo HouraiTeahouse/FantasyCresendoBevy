@@ -1,8 +1,9 @@
-use super::on_match_update;
+use super::{on_match_update, player::PlayerMovement};
 use crate::time::FrameTimer;
 use bevy::{ecs::system::SystemParam, math::*, prelude::*};
 use fc_core::{
     geo::*,
+    input::PlayerInput,
     player::Facing,
     stage::{RespawnPoint, Surface},
 };
@@ -73,6 +74,12 @@ impl Body {
     pub fn advance_tick(&mut self, ctx: &mut StageContext) {
         match &mut self.location {
             Location::Surface { surface, position } => {
+                if self.velocity.y != 0.0 {
+                    self.become_airborne(ctx);
+                    self.advance_tick(ctx);
+                    return;
+                }
+
                 let surface = ctx.surface(*surface);
                 let left = surface.left().point.x;
                 let right = surface.right().point.x;
@@ -93,11 +100,6 @@ impl Body {
                 // Check for grounded checks.
                 let delta = LineSegment2D::new(prior, *position);
                 if let Some(location) = ctx.collision_check(delta) {
-                    info!(
-                        "{:?} {:?}",
-                        self.location.calculate_position(ctx),
-                        location.calculate_position(ctx)
-                    );
                     self.velocity.y = 0.0;
                     self.location = location;
                 }
@@ -107,14 +109,18 @@ impl Body {
                 remaining_time,
             } => {
                 remaining_time.tick();
-                if remaining_time.is_done() {
+                if self.velocity != Vec2::ZERO && remaining_time.is_done() {
                     let mut respawn = ctx.respawn_point(*point);
                     self.location = Location::Airborne(respawn.position);
                     respawn.occupied_by = None;
                 }
             }
-            _ => {}
         }
+    }
+
+    fn become_airborne(&mut self, ctx: &mut StageContext) {
+        let position = self.location.calculate_position(ctx);
+        self.location = Location::Airborne(position.xy());
     }
 }
 
@@ -177,10 +183,13 @@ impl<'a> StageContext<'a> {
 
     /// Checks if a body's motion intersects with stage geometry.
     pub fn collision_check(&self, movement: LineSegment2D) -> Option<Location> {
+        if movement.start.y < movement.end.y {
+            return None;
+        }
+
         for (entity, surface) in self.surfaces.iter() {
             let segment = surface.as_segment();
             if movement.intersects(segment) {
-                info!("{:?}", segment);
                 return Some(Location::Surface {
                     surface: entity,
                     position: movement.end.x,
@@ -191,6 +200,24 @@ impl<'a> StageContext<'a> {
     }
 }
 
+fn move_players(mut players: Query<(&mut Body, &mut PlayerMovement, &PlayerInput)>) {
+    for (mut body, mut movement, input) in players.iter_mut() {
+        body.velocity.x = f32::from(input.current.movement.x) * 3.0;
+
+        // Handle jumps
+        if body.location.is_grounded() {
+            movement.reset_jumps();
+        }
+        if input.was_pressed().jump() {
+            if let Some(power) = movement.next_jump_power() {
+                info!("Jumped {}", power);
+                body.velocity.y = power;
+            }
+        }
+    }
+}
+
+/// System to update existing bodies
 fn update_bodies(mut stage: StageContext, mut bodies: Query<(&mut Body, &mut Transform)>) {
     for (mut body, mut transform) in bodies.iter_mut() {
         body.advance_tick(&mut stage);
@@ -200,5 +227,9 @@ fn update_bodies(mut stage: StageContext, mut bodies: Query<(&mut Body, &mut Tra
 }
 
 pub(super) fn build(builder: &mut AppBuilder) {
-    builder.add_system_set(on_match_update().with_system(update_bodies.system()));
+    builder.add_system_set(
+        on_match_update()
+            .with_system(update_bodies.system())
+            .with_system(move_players.system()),
+    );
 }

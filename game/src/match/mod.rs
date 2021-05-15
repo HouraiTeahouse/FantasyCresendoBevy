@@ -9,7 +9,6 @@ use bevy::{
 use fc_core::{
     character::{frame_data::*, state::*},
     geo::*,
-    input::*,
     player::Player,
     stage::*,
 };
@@ -89,8 +88,6 @@ fn init_match(
     spawn_points: Query<&SpawnPoint>,
     mut result: ResMut<MatchResult>,
     mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     assert!(config.validate().is_ok());
 
@@ -101,11 +98,6 @@ fn init_match(
         time_remaining: config.time.clone(),
         ..Default::default()
     };
-    let mesh = meshes.add(Mesh::from(shape::Capsule {
-        radius: 0.5,
-        depth: 1.0,
-        ..Default::default()
-    }));
     // TODO(jamessliu): This will not work for a new match from a menu.
     // Systems need to be properly ordered to ensure that spawn points are added before players
     // are spawned.
@@ -127,6 +119,11 @@ fn init_match(
                     }),
                     location: physics::Location::Airborne(transform.translation.xy()),
                     gravity: 1.0,
+                    ..Default::default()
+                },
+                movement: PlayerMovement {
+                    jump_power: vec![2.5, 1.5],
+                    short_jump_power: 0.9,
                     ..Default::default()
                 },
                 transform,
@@ -161,13 +158,6 @@ fn sample_frames(mut query: Query<(&mut CharacterFrame, &mut PlayerState, &State
         if let Some(sampled) = state_machine.sample_frame(&state) {
             *frame = sampled.clone();
         }
-    }
-}
-
-fn move_players(mut players: Query<(&mut physics::Body, &PlayerInput)>) {
-    for (mut body, input) in players.iter_mut() {
-        let movement = &input.current.movement;
-        body.velocity.x = f32::from(movement.x) * 3.0;
     }
 }
 
@@ -251,7 +241,6 @@ impl Plugin for FcMatchPlugin {
             .add_system_set(SystemSet::on_exit(AppState::MATCH).with_system(cleanup_match.system()))
             .add_system_set(
                 on_match_update()
-                    .with_system(move_players.system())
                     .with_system(update_player_transforms.system())
                     .with_system(sample_frames.system())
                     .with_system(input::sample_input.system())
