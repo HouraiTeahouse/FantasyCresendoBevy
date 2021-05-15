@@ -1,15 +1,19 @@
-use super::on_match_update;
 use super::{
     events::PlayerDied,
+    on_match_update,
     physics::{Body, Location},
     player::PlayerDamage,
 };
+use crate::time::FrameTimer;
 use bevy::{math::*, prelude::*};
 use fc_core::{
     geo::Bounds2D,
     player::{Facing, Player},
-    stage::{BlastZone, RespawnPoint, SpawnPoint, Surface, SurfacePoint},
+    stage::{BlastZone, RespawnPoint, SpawnPoint, Surface},
 };
+
+// TODO(james7132): Make this a game config option.
+const MAX_RESPAWN_FRAMES: u16 = 300;
 
 fn setup_stage(mut commands: Commands) {
     commands.spawn().insert(BlastZone(Bounds2D {
@@ -77,13 +81,13 @@ fn setup_stage(mut commands: Commands) {
 // TODO(james7132): This is fucknormous, simplify or split this system.
 fn kill_players(
     blast_zones: Query<&BlastZone>,
-    mut respawn_points: Query<&mut RespawnPoint>,
+    mut respawn_points: Query<(Entity, &mut RespawnPoint)>,
     mut players: Query<(&mut PlayerDamage, &mut Body, &Transform, &Player)>,
     mut died: EventWriter<PlayerDied>,
 ) {
-    let mut respawn_points: Vec<Mut<RespawnPoint>> = respawn_points
+    let mut respawn_points: Vec<(Entity, Mut<RespawnPoint>)> = respawn_points
         .iter_mut()
-        .filter(|p| p.occupied_by.is_none())
+        .filter(|p| p.1.occupied_by.is_none())
         .collect();
     let bounds: Vec<&Bounds2D> = blast_zones.iter().map(|bz| &bz.0).collect();
     for (mut damage, mut body, transform, player) in players.iter_mut() {
@@ -93,11 +97,14 @@ fn kill_players(
             let revive = damage.can_revive();
             if revive {
                 damage.revive();
-                let mut respawn_point = respawn_points
+                let (respawn_entity, mut respawn_point) = respawn_points
                     .pop()
                     .expect("Player died and no available respawn points!");
                 respawn_point.occupied_by = Some(player.clone());
-                body.location = Location::Airborne(respawn_point.position);
+                body.location = Location::Respawning {
+                    point: respawn_entity,
+                    remaining_time: FrameTimer::new(MAX_RESPAWN_FRAMES),
+                };
                 body.facing = respawn_point.facing;
             }
             died.send(PlayerDied {

@@ -27,22 +27,23 @@ impl<T: Point> LineSegment<T> {
     }
 
     pub fn length(&self) -> f32 {
-        (self.end - self.end).length()
+        self.diff().length()
     }
 
     pub fn length_squared(&self) -> f32 {
-        (self.end - self.end).length_squared()
-    }
-
-    pub fn lerp(&self, x: f32) -> T {
-        self.start.lerp(self.end, x)
+        self.diff().length_squared()
     }
 
     pub fn bounds(&self) -> Bounds<T> {
         Bounds::<T> {
-            center: self.lerp(0.5),
+            center: self.end * 0.5 + self.start * 0.5,
             extents: (self.start - self.end).abs() * 0.5,
         }
+    }
+
+    #[inline(always)]
+    fn diff(&self) -> T {
+        self.end - self.start
     }
 }
 
@@ -54,7 +55,7 @@ impl LineSegment2D {
         let o4 = Self::triplet_orientation(other.start, other.end, self.end);
 
         let c1 = Self::point_on_segment(self.start, other.end, self.end);
-        let c2 = Self::point_on_segment(self.start, other.end, self.end);
+        let c2 = Self::point_on_segment(other.start, self.end, other.end);
 
         // General case
         (o1 != o2 && o3 != o4) ||
@@ -69,7 +70,7 @@ impl LineSegment2D {
         match (q - p).yx().dot(r - q) {
             x if x > 0.0 => TripletOrientation::Clockwise,
             x if x < 0.0 => TripletOrientation::CounterClockwise,
-            x => TripletOrientation::Colinear,
+            _ => TripletOrientation::Colinear,
         }
     }
 
@@ -77,6 +78,14 @@ impl LineSegment2D {
     /// checks if point q lies on segment pr
     fn point_on_segment(p: Vec2, q: Vec2, r: Vec2) -> bool {
         q.cmple(p.max(r)).all() && q.cmpge(p.min(r)).all()
+    }
+
+    pub fn world_position(&self, x: f32) -> Vec2 {
+        // TODO(james7123): This will produce a invalid result if the platform is vertical,
+        // ensure this doesn't happen.
+        let diff = self.diff();
+        let y = (diff.y / diff.x) * (x - self.start.x) + self.start.y;
+        (x, y).into()
     }
 }
 

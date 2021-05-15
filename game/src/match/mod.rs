@@ -126,6 +126,7 @@ fn init_match(
                         extents: Vec2::new(0.25, 0.5),
                     }),
                     location: physics::Location::Airborne(transform.translation.xy()),
+                    gravity: 1.0,
                     ..Default::default()
                 },
                 transform,
@@ -163,35 +164,11 @@ fn sample_frames(mut query: Query<(&mut CharacterFrame, &mut PlayerState, &State
     }
 }
 
-fn move_players(
-    mut players: Query<(&mut physics::Body, &PlayerInput)>,
-    surfaces: Query<(Entity, &Surface)>,
-) {
+fn move_players(mut players: Query<(&mut physics::Body, &PlayerInput)>) {
     for (mut body, input) in players.iter_mut() {
-        if let physics::Location::Airborne(ref mut pos) = body.location {
-            let before = pos.clone();
-            let movement = &input.current.movement;
-            pos.x += f32::from(movement.x) * 0.1;
-            pos.y += f32::from(movement.y) * 0.1;
-            if let Some(surface) =
-                player_stage_collision(LineSegment2D::new(before, pos.clone()), &surfaces)
-            {
-                info!("{:?}", surface);
-            }
-        }
+        let movement = &input.current.movement;
+        body.velocity.x = f32::from(movement.x) * 3.0;
     }
-}
-
-fn player_stage_collision(
-    movement: LineSegment2D,
-    surfaces: &Query<(Entity, &Surface)>,
-) -> Option<Surface> {
-    for (entity, surface) in surfaces.iter() {
-        if movement.intersects(surface.as_segment()) {
-            return Some(surface.clone());
-        }
-    }
-    None
 }
 
 fn update_player_transforms(mut players: Query<(&mut Transform, &physics::Body)>) {
@@ -284,5 +261,6 @@ impl Plugin for FcMatchPlugin {
         stage::build(builder);
         events::build(builder);
         rule::build(builder);
+        physics::build(builder);
     }
 }
