@@ -21,11 +21,11 @@ pub enum AppState {
     MATCH,
 }
 
-fn create_input_source(arrow: ButtonAxis2D<KeyCode>) -> InputSource {
+fn create_input_source(arrow: ButtonAxis2D<KeyCode>, jump: KeyCode) -> InputSource {
     let mut buttons: HashMap<Buttons, Vec<KeyCode>> = HashMap::new();
     buttons.insert(Buttons::ATTACK, vec![KeyCode::F]);
     buttons.insert(Buttons::SPECIAL, vec![KeyCode::D]);
-    buttons.insert(Buttons::JUMP, vec![KeyCode::I, KeyCode::A, KeyCode::S]);
+    buttons.insert(Buttons::JUMP, vec![jump]);
     buttons.insert(Buttons::SHIELD, vec![KeyCode::Q, KeyCode::W]);
     InputSource::Keyboard {
         movement: arrow.clone(),
@@ -55,31 +55,37 @@ fn main() {
                 character_id: 0,
                 pallete: 0,
                 default_damage: 0.0,
-                input: create_input_source(ButtonAxis2D::<KeyCode> {
-                    horizontal: ButtonAxis1D::<KeyCode> {
-                        pos: KeyCode::D,
-                        neg: KeyCode::A,
+                input: create_input_source(
+                    ButtonAxis2D::<KeyCode> {
+                        horizontal: ButtonAxis1D::<KeyCode> {
+                            pos: KeyCode::D,
+                            neg: KeyCode::A,
+                        },
+                        vertical: ButtonAxis1D::<KeyCode> {
+                            pos: KeyCode::W,
+                            neg: KeyCode::S,
+                        },
                     },
-                    vertical: ButtonAxis1D::<KeyCode> {
-                        pos: KeyCode::W,
-                        neg: KeyCode::S,
-                    },
-                }),
+                    KeyCode::W,
+                ),
             }),
             Some(player::PlayerConfig {
                 character_id: 0,
                 pallete: 0,
                 default_damage: 0.0,
-                input: create_input_source(ButtonAxis2D::<KeyCode> {
-                    horizontal: ButtonAxis1D::<KeyCode> {
-                        pos: KeyCode::L,
-                        neg: KeyCode::J,
+                input: create_input_source(
+                    ButtonAxis2D::<KeyCode> {
+                        horizontal: ButtonAxis1D::<KeyCode> {
+                            pos: KeyCode::L,
+                            neg: KeyCode::J,
+                        },
+                        vertical: ButtonAxis1D::<KeyCode> {
+                            pos: KeyCode::I,
+                            neg: KeyCode::K,
+                        },
                     },
-                    vertical: ButtonAxis1D::<KeyCode> {
-                        pos: KeyCode::I,
-                        neg: KeyCode::K,
-                    },
-                }),
+                    KeyCode::I,
+                ),
             }),
             None,
             None,
