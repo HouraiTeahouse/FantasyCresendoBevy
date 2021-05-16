@@ -122,10 +122,10 @@ fn update_match_state(
     players: Query<(&Player, &PlayerDamage)>,
 ) {
     if let Some(ref mut time) = state.time_remaining {
-        if *time > 0 {
-            *time -= 1;
-        } else if *time == 0 {
+        if *time == 0 {
             results.winner = config.rule.find_winner(players.iter(), /*force=*/ true);
+        } else {
+            *time -= 1;
         }
     }
 }
@@ -149,7 +149,7 @@ fn on_player_died(
 // FIXME(james7132): Sending an AppExit is not a viable long term approach, fix this.
 fn finish_match(result: Res<MatchResult>, mut exit: EventWriter<bevy::app::AppExit>) {
     match &result.winner {
-        MatchWinner::Undecided => return,
+        MatchWinner::Undecided => {}
         winner => {
             info!("Match finished: The winner is: {:?}", winner);
             exit.send(AppExit);

@@ -56,7 +56,7 @@ fn load_folder<T: TypeUuid + Send + Sync + 'static>(
 ) -> Vec<Handle<T>> {
     asset_server
         .load_folder(folder)
-        .expect(format!("Failed to load {}", folder).as_str())
+        .unwrap_or_else(|_| panic!("Failed to load {}", folder))
         .into_iter()
         .map(|handle| handle.typed::<T>())
         .collect()

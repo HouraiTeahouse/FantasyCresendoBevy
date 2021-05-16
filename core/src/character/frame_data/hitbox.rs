@@ -1,5 +1,4 @@
 use super::ScalableValue;
-use bevy::math::Vec2;
 use serde::{Deserialize, Serialize};
 use std::cmp::{Ord, Ordering, PartialOrd};
 

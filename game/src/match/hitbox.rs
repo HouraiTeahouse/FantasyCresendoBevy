@@ -148,6 +148,7 @@ pub(super) fn build(builder: &mut AppBuilder) {
     builder.add_event::<HitCollision>().add_system_set(
         on_match_update()
             .with_system(update_hitboxes.system())
-            .with_system(collide_hitboxes.system()),
+            .with_system(collide_hitboxes.system())
+            .with_system(hit_players.system()),
     );
 }

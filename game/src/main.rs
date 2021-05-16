@@ -30,7 +30,7 @@ fn create_input_source(arrow: ButtonAxis2D<KeyCode>, jump: KeyCode) -> InputSour
     InputSource::Keyboard {
         movement: arrow.clone(),
         smash: arrow.clone(),
-        buttons: ButtonMapping::<KeyCode>(buttons.clone()),
+        buttons: ButtonMapping::<KeyCode>(buttons),
     }
 }
 

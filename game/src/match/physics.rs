@@ -1,12 +1,7 @@
 use super::{on_match_update, player::PlayerMovement, stage::StageContext};
 use crate::time::FrameTimer;
 use bevy::{math::*, prelude::*};
-use fc_core::{
-    geo::*,
-    input::PlayerInput,
-    player::Facing,
-    stage::{RespawnPoint, Surface},
-};
+use fc_core::{geo::*, input::PlayerInput, player::Facing};
 
 // TODO(james7132): Make these game config options.
 const DELTA_TIME: f32 = 1.0 / 60.0;
@@ -123,7 +118,9 @@ impl Body {
                 let prior = *position;
                 if self.drag > 0.0 && self.velocity.abs() != Vec2::ZERO {
                     let speed = self.velocity.length();
-                    self.velocity = self.velocity.clamp_length_max(-self.drag * DELTA_TIME);
+                    self.velocity = self
+                        .velocity
+                        .clamp_length_max(speed - self.drag * DELTA_TIME);
                 } else {
                     self.drag = 0.0;
                 }
@@ -154,6 +151,7 @@ impl Body {
     pub fn launch(&mut self, force: Vec2, ctx: &mut StageContext) {
         let weight_scaling = 2.0 - (2.0 * self.weight) / (1.0 + self.weight);
         self.velocity = force * weight_scaling;
+        self.drag = LAUNCH_DRAG;
         if self.velocity.length() >= UNGROUND_THRESHOLD {
             self.become_airborne(ctx);
         }
@@ -205,7 +203,7 @@ impl EnvironmentCollisionBox {
 
 impl From<EnvironmentCollisionBox> for Bounds2D {
     fn from(value: EnvironmentCollisionBox) -> Self {
-        value.0.clone()
+        value.0
     }
 }
 

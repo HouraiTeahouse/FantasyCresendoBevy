@@ -68,8 +68,8 @@ pub struct MatchResult {
 impl MatchResult {
     pub fn from_config(config: &MatchConfig) -> Self {
         let mut players: [Option<PlayerResult>; MAX_PLAYERS_PER_MATCH] = Default::default();
-        for idx in 0..MAX_PLAYERS_PER_MATCH {
-            if config.players[idx].is_some() {
+        for (idx, player) in config.players.iter().enumerate() {
+            if player.is_some() {
                 players[idx] = Some(PlayerResult::default());
             }
         }
@@ -163,15 +163,6 @@ fn sample_frames(mut query: Query<(&mut CharacterFrame, &mut PlayerState, &State
     }
 }
 
-fn update_player_transforms(mut players: Query<(&mut Transform, &physics::Body)>) {
-    for (mut transform, body) in players.iter_mut() {
-        match body.location {
-            physics::Location::Airborne(pos) => transform.translation = Vec3::from((pos, 0.0)),
-            _ => {}
-        }
-    }
-}
-
 fn update_camera(
     mut cameras: Query<(&mut Transform, &Camera, &PerspectiveProjection)>,
     players: Query<(&GlobalTransform, &physics::Body), With<Player>>,
@@ -243,7 +234,6 @@ impl Plugin for FcMatchPlugin {
             .add_system_set(SystemSet::on_exit(AppState::MATCH).with_system(cleanup_match.system()))
             .add_system_set(
                 on_match_update()
-                    .with_system(update_player_transforms.system())
                     .with_system(sample_frames.system())
                     .with_system(input::sample_input.system())
                     .with_system(update_camera.system()),
