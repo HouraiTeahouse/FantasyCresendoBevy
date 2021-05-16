@@ -96,10 +96,39 @@ impl Surface {
         LineSegment2D::new(self.start.point, self.end.point)
     }
 
-    /// Computes a position along the surface.
-    /// If position is not in the range [0, 1], it will use the full 2D line projection.
-    pub fn lerp(&self, position: f32) -> Vec2 {
-        Vec2::lerp(self.start.point, self.end.point, position)
+    /// Checks if one of the ends of the surface is one of ends.
+    pub fn has_end(&self, point: Vec2) -> bool {
+        self.start.point == point || self.end.point == point
+    }
+
+    /// Gets the other end of the surface, if available.
+    /// If the provided point is not either end, returns None.
+    pub fn other(&self, point: Vec2) -> Option<&SurfacePoint> {
+        if point == self.start.point {
+            Some(&self.end)
+        } else if point == self.end.point {
+            Some(&self.start)
+        } else {
+            None
+        }
+    }
+
+    /// Gets the total change in X across the surface.
+    pub fn delta_x(&self) -> f32 {
+        (self.end.point.x - self.start.point.x).abs()
+    }
+
+    /// Gets the total change in Y across the surface.
+    pub fn delta_y(&self) -> f32 {
+        (self.end.point.y - self.start.point.y).abs()
+    }
+
+    pub fn contains_x(&self, x: f32) -> bool {
+        x >= self.left().point.x && x <= self.right().point.x
+    }
+
+    pub fn contains_y(&self, y: f32) -> bool {
+        y >= self.left().point.y && y <= self.right().point.y
     }
 }
 

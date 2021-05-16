@@ -80,11 +80,40 @@ impl Body {
                     return;
                 }
 
-                let surface = ctx.surface(*surface);
-                let left = surface.left().point.x;
-                let right = surface.right().point.x;
                 self.velocity.y = 0.0;
-                *position = f32::clamp(*position + self.velocity.x * DELTA_TIME, left, right);
+                let mut surf = ctx.surface(*surface);
+                let delta_x = self.velocity.x * DELTA_TIME;
+                let left = surf.left().point;
+                let right = surf.right().point;
+                let (pos_x, query) = match *position + delta_x {
+                    x if x < left.x => (x, Some(left)),
+                    x if x > right.x => (x, Some(right)),
+                    x => (x, None),
+                };
+                *position = pos_x;
+
+                if query.is_none() {
+                    return;
+                }
+                let mut target = query.unwrap();
+                loop {
+                    let mut found = false;
+                    for (entity, test) in ctx.surfaces.iter() {
+                        if test.has_end(target) && entity != *surface {
+                            found = true;
+                            *surface = entity;
+                            target = surf.other(target).unwrap().point;
+                            surf = test;
+                            break;
+                        }
+                    }
+                    if !found {
+                        *position = position.clamp(surf.left().point.x, surf.right().point.x);
+                    }
+                    if surf.contains_x(*position) {
+                        break;
+                    }
+                }
             }
             Location::Airborne(ref mut position) => {
                 let prior = *position;
