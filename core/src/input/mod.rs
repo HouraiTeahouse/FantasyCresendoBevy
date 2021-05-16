@@ -2,7 +2,11 @@ use bevy::math::{Vec2, Vec3};
 use bevy_input::{gamepad::GamepadButton, keyboard::KeyCode, Input};
 use serde::{Deserialize, Serialize};
 use std::fmt;
-use std::{collections::HashMap, hash::Hash, ops::{Add, Sub}};
+use std::{
+    collections::HashMap,
+    hash::Hash,
+    ops::{Add, Sub},
+};
 
 bitflags! {
     #[derive(Default, Serialize, Deserialize)]
