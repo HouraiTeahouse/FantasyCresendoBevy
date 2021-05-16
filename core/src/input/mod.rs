@@ -2,7 +2,7 @@ use bevy::math::{Vec2, Vec3};
 use bevy_input::{gamepad::GamepadButton, keyboard::KeyCode, Input};
 use serde::{Deserialize, Serialize};
 use std::fmt;
-use std::{collections::HashMap, hash::Hash};
+use std::{collections::HashMap, hash::Hash, ops::{Add, Sub}};
 
 bitflags! {
     #[derive(Default, Serialize, Deserialize)]
@@ -87,6 +87,24 @@ impl Buttons {
 #[derive(Clone, Copy, Default, Eq, PartialEq)]
 pub struct Axis1D(pub i8);
 
+impl Add<Axis1D> for Axis1D {
+    type Output = Self;
+    #[inline(always)]
+    fn add(self, rhs: Self) -> Self {
+        let x = std::cmp::min(i8::MAX as i16, (self.0 as i16) + (rhs.0 as i16));
+        Self(x as i8)
+    }
+}
+
+impl Sub<Axis1D> for Axis1D {
+    type Output = Self;
+    #[inline(always)]
+    fn sub(self, rhs: Self) -> Self {
+        let x = std::cmp::min(i8::MIN as i16, (self.0 as i16) - (rhs.0 as i16));
+        Self(x as i8)
+    }
+}
+
 impl From<Axis1D> for f32 {
     fn from(value: Axis1D) -> Self {
         Self::from(value.0) / Self::from(i8::MAX)
@@ -109,6 +127,28 @@ impl fmt::Debug for Axis1D {
 pub struct Axis2D {
     pub x: Axis1D,
     pub y: Axis1D,
+}
+
+impl Add<Axis2D> for Axis2D {
+    type Output = Self;
+    #[inline(always)]
+    fn add(self, rhs: Self) -> Self {
+        Self {
+            x: self.x + rhs.x,
+            y: self.y + rhs.y,
+        }
+    }
+}
+
+impl Sub<Axis2D> for Axis2D {
+    type Output = Self;
+    #[inline(always)]
+    fn sub(self, rhs: Self) -> Self {
+        Self {
+            x: self.x - rhs.x,
+            y: self.y - rhs.y,
+        }
+    }
 }
 
 impl From<Axis2D> for Vec2 {
@@ -156,6 +196,14 @@ impl PlayerInput {
 
     pub fn was_released(&self) -> Buttons {
         !self.previous.buttons & self.current.buttons
+    }
+
+    pub fn move_diff(&self) -> Axis2D {
+        self.current.movement - self.previous.movement
+    }
+
+    pub fn smash_diff(&self) -> Axis2D {
+        self.current.movement - self.previous.movement
     }
 }
 
