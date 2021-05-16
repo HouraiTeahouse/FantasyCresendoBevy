@@ -100,6 +100,10 @@ fn setup(mut commands: Commands) {
     commands.spawn_bundle(UiCameraBundle::default());
     commands.spawn_bundle(PerspectiveCameraBundle {
         transform: Transform::from_xyz(0.0, 0.0, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
+        perspective_projection: bevy::render::camera::PerspectiveProjection {
+            fov: 60.0 * std::f32::consts::PI / 180.0,
+            ..Default::default()
+        },
         ..Default::default()
     });
 }
