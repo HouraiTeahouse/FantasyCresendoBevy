@@ -254,7 +254,8 @@ fn move_players(mut players: Query<(&mut Body, &mut PlayerMovement, &PlayerInput
             movement.reset_jumps();
             movement.fast_falling = false;
         } else {
-            if body.is_falling() && input.move_diff().y() < -0.5 && input.current.movement.y() < 0.0 {
+            if body.is_falling() && input.move_diff().y() < -0.5 && input.current.movement.y() < 0.0
+            {
                 movement.fast_falling = true;
             }
             movement.limit_fall_speed(&mut body);

@@ -246,12 +246,12 @@ impl Plugin for FcMatchPlugin {
                     .with_system(update_player_transforms.system())
                     .with_system(sample_frames.system())
                     .with_system(input::sample_input.system())
-                    .with_system(hitbox::update_hitboxes.system())
                     .with_system(update_camera.system()),
             );
         stage::build(builder);
         events::build(builder);
         rule::build(builder);
         physics::build(builder);
+        hitbox::build(builder);
     }
 }

@@ -1,5 +1,6 @@
 use bevy::math::Vec2;
 use serde::{Deserialize, Serialize};
+use std::ops::{Add, Sub};
 
 pub mod hitbox;
 pub mod hurtbox;
@@ -63,5 +64,37 @@ impl StateFrameData {
     /// exceeds the frame length of the state is exceeded.
     pub fn get_frame_looped(&self, frame: usize) -> Option<&CharacterFrame> {
         self.frames.get(frame % self.frames.len())
+    }
+}
+
+#[derive(Debug, Default, Clone, Copy, Serialize, Deserialize)]
+pub struct ScalableValue {
+    pub base: f32,
+    pub growth: f32,
+}
+
+impl ScalableValue {
+    pub fn evaluate(&self, scaling: f32) -> f32 {
+        self.base + scaling * self.growth
+    }
+}
+
+impl Add<ScalableValue> for ScalableValue {
+    type Output = Self;
+    fn add(self, other: Self) -> Self {
+        Self {
+            base: self.base + other.base,
+            growth: self.growth + other.growth,
+        }
+    }
+}
+
+impl Sub<ScalableValue> for ScalableValue {
+    type Output = Self;
+    fn sub(self, other: Self) -> Self {
+        Self {
+            base: self.base - other.base,
+            growth: self.growth - other.growth,
+        }
     }
 }

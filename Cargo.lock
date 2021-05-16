@@ -1123,6 +1123,7 @@ dependencies = [
  "bevy",
  "bitflags",
  "fc-core",
+ "libm 0.2.1",
  "serde",
  "serde_json",
 ]
