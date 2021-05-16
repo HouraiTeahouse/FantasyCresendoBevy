@@ -5,15 +5,51 @@ use super::{
     player::PlayerDamage,
 };
 use crate::time::FrameTimer;
-use bevy::{math::*, prelude::*};
+use bevy::{ecs::system::SystemParam, math::*, prelude::*};
 use fc_core::{
-    geo::Bounds2D,
+    geo::{Bounds2D, LineSegment2D},
     player::{Facing, Player},
     stage::{BlastZone, RespawnPoint, SpawnPoint, Surface},
 };
 
 // TODO(james7132): Make this a game config option.
 const MAX_RESPAWN_FRAMES: u16 = 300;
+
+#[derive(SystemParam)]
+pub struct StageContext<'a> {
+    pub surfaces: Query<'a, (Entity, &'static Surface)>,
+    pub respawn_points: Query<'a, &'static mut RespawnPoint>,
+}
+
+impl<'a> StageContext<'a> {
+    pub fn surface(&self, entity: Entity) -> &Surface {
+        self.surfaces.get(entity).expect("Missing surface.").1
+    }
+
+    pub fn respawn_point(&mut self, entity: Entity) -> Mut<RespawnPoint> {
+        self.respawn_points
+            .get_mut(entity)
+            .expect("Missing respawn point.")
+    }
+
+    /// Checks if a body's motion intersects with stage geometry.
+    pub fn collision_check(&self, movement: LineSegment2D) -> Option<Location> {
+        if movement.start.y < movement.end.y {
+            return None;
+        }
+
+        for (entity, surface) in self.surfaces.iter() {
+            let segment = surface.as_segment();
+            if movement.intersects(segment) {
+                return Some(Location::Surface {
+                    surface: entity,
+                    position: movement.end.x,
+                });
+            }
+        }
+        None
+    }
+}
 
 fn setup_stage(mut commands: Commands) {
     commands.spawn().insert(BlastZone(Bounds2D {

@@ -1,6 +1,6 @@
-use super::{on_match_update, player::PlayerMovement};
+use super::{on_match_update, player::PlayerMovement, stage::StageContext};
 use crate::time::FrameTimer;
-use bevy::{ecs::system::SystemParam, math::*, prelude::*};
+use bevy::{math::*, prelude::*};
 use fc_core::{
     geo::*,
     input::PlayerInput,
@@ -206,42 +206,6 @@ impl EnvironmentCollisionBox {
 impl From<EnvironmentCollisionBox> for Bounds2D {
     fn from(value: EnvironmentCollisionBox) -> Self {
         value.0.clone()
-    }
-}
-
-#[derive(SystemParam)]
-pub struct StageContext<'a> {
-    pub surfaces: Query<'a, (Entity, &'static Surface)>,
-    pub respawn_points: Query<'a, &'static mut RespawnPoint>,
-}
-
-impl<'a> StageContext<'a> {
-    pub fn surface(&self, entity: Entity) -> &Surface {
-        self.surfaces.get(entity).expect("Missing surface.").1
-    }
-
-    pub fn respawn_point(&mut self, entity: Entity) -> Mut<RespawnPoint> {
-        self.respawn_points
-            .get_mut(entity)
-            .expect("Missing respawn point.")
-    }
-
-    /// Checks if a body's motion intersects with stage geometry.
-    pub fn collision_check(&self, movement: LineSegment2D) -> Option<Location> {
-        if movement.start.y < movement.end.y {
-            return None;
-        }
-
-        for (entity, surface) in self.surfaces.iter() {
-            let segment = surface.as_segment();
-            if movement.intersects(segment) {
-                return Some(Location::Surface {
-                    surface: entity,
-                    position: movement.end.x,
-                });
-            }
-        }
-        None
     }
 }
 
