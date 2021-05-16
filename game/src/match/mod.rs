@@ -124,6 +124,8 @@ fn init_match(
                 movement: PlayerMovement {
                     jump_power: vec![2.5, 1.5],
                     short_jump_power: 0.9,
+                    max_fall_speed: 2.0,
+                    fast_fall_speed: 5.0,
                     ..Default::default()
                 },
                 transform,

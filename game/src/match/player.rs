@@ -27,6 +27,9 @@ pub(super) struct PlayerMovement {
     pub jump_count: usize,
     pub jump_power: Vec<f32>,
     pub short_jump_power: f32,
+    pub fast_falling: bool,
+    pub fast_fall_speed: f32,
+    pub max_fall_speed: f32,
 }
 
 impl PlayerMovement {
@@ -40,6 +43,14 @@ impl PlayerMovement {
 
     pub fn reset_jumps(&mut self) {
         self.jump_count = 0;
+    }
+
+    pub fn limit_fall_speed(&self, body: &mut physics::Body) {
+        if self.fast_falling {
+            body.velocity.y = -self.fast_fall_speed;
+        } else if body.velocity.y < -self.max_fall_speed {
+            body.velocity.y = -self.max_fall_speed;
+        }
     }
 }
 

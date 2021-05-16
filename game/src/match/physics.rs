@@ -8,7 +8,10 @@ use fc_core::{
     stage::{RespawnPoint, Surface},
 };
 
+// TODO(james7132): Make these game config options.
 const DELTA_TIME: f32 = 1.0 / 60.0;
+const LAUNCH_DRAG: f32 = 3.06;
+const UNGROUND_THRESHOLD: f32 = 50.0;
 
 bitflags! {
     pub struct PhysicsGroups : u16 {
@@ -61,12 +64,12 @@ impl Default for Location {
 
 #[derive(Debug, Default)]
 pub struct Body {
-    pub mass: f32,
+    pub weight: f32,
     pub facing: Facing,
     pub location: Location,
     pub velocity: Vec2,
-    pub gravity: f32,
     pub drag: f32,
+    pub gravity: f32,
     pub ecb: EnvironmentCollisionBox,
 }
 
@@ -81,6 +84,7 @@ impl Body {
                 }
 
                 self.velocity.y = 0.0;
+                self.drag = 0.0;
                 let mut surf = ctx.surface(*surface);
                 let delta_x = self.velocity.x * DELTA_TIME;
                 let left = surf.left().point;
@@ -117,11 +121,11 @@ impl Body {
             }
             Location::Airborne(ref mut position) => {
                 let prior = *position;
-                if self.velocity.abs() != Vec2::ZERO {
+                if self.drag > 0.0 && self.velocity.abs() != Vec2::ZERO {
                     let speed = self.velocity.length();
-                    self.velocity = self
-                        .velocity
-                        .clamp_length_max(speed - self.drag * DELTA_TIME);
+                    self.velocity = self.velocity.clamp_length_max(-self.drag * DELTA_TIME);
+                } else {
+                    self.drag = 0.0;
                 }
                 self.velocity.y -= self.gravity * DELTA_TIME;
                 *position += self.velocity * DELTA_TIME;
@@ -145,6 +149,18 @@ impl Body {
                 }
             }
         }
+    }
+
+    pub fn launch(&mut self, force: Vec2, ctx: &mut StageContext) {
+        let weight_scaling = 2.0 - (2.0 * self.weight) / (1.0 + self.weight);
+        self.velocity = force * weight_scaling;
+        if self.velocity.length() >= UNGROUND_THRESHOLD {
+            self.become_airborne(ctx);
+        }
+    }
+
+    pub fn is_falling(&self) -> bool {
+        !self.location.is_grounded() && self.velocity.y < 0.0
     }
 
     fn become_airborne(&mut self, ctx: &mut StageContext) {
@@ -236,10 +252,15 @@ fn move_players(mut players: Query<(&mut Body, &mut PlayerMovement, &PlayerInput
         // Handle jumps
         if body.location.is_grounded() {
             movement.reset_jumps();
+            movement.fast_falling = false;
+        } else {
+            if body.is_falling() && input.move_diff().y() < -0.5 {
+                movement.fast_falling = true;
+            }
+            movement.limit_fall_speed(&mut body);
         }
         if input.was_pressed().jump() {
             if let Some(power) = movement.next_jump_power() {
-                info!("Jumped {}", power);
                 body.velocity.y = power;
             }
         }

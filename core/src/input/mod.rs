@@ -104,7 +104,7 @@ impl Sub<Axis1D> for Axis1D {
     type Output = Self;
     #[inline(always)]
     fn sub(self, rhs: Self) -> Self {
-        let x = std::cmp::min(i8::MIN as i16, (self.0 as i16) - (rhs.0 as i16));
+        let x = std::cmp::max(i8::MIN as i16, (self.0 as i16) - (rhs.0 as i16));
         Self(x as i8)
     }
 }
@@ -131,6 +131,16 @@ impl fmt::Debug for Axis1D {
 pub struct Axis2D {
     pub x: Axis1D,
     pub y: Axis1D,
+}
+
+impl Axis2D {
+    pub fn x(&self) -> f32 {
+        f32::from(self.x)
+    }
+
+    pub fn y(&self) -> f32 {
+        f32::from(self.y)
+    }
 }
 
 impl Add<Axis2D> for Axis2D {
@@ -207,7 +217,7 @@ impl PlayerInput {
     }
 
     pub fn smash_diff(&self) -> Axis2D {
-        self.current.movement - self.previous.movement
+        self.current.smash - self.previous.smash
     }
 }
 
