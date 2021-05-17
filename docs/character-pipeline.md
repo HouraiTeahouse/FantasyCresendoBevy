@@ -125,3 +125,75 @@ TODO(james7132): Make the character editor and add it here.
 ## Optional: Localization
 
 ## Appendix: Reserved Animations
+
+These names are exact and must be available upon character validation. These do
+not need to be distinct animations. If need be, copy animations from one to
+another.
+
+|Name|Description|
+|:---|:----------|
+|Action_Wait|Idle|
+|Action_Walk|Walking|
+|Action_Dash|Start run|
+|Action_Run|Running|
+|Action_RunBrake|Stop running|
+|Action_Fall|Falling while airborne|
+|Action_FallHelpless|Falling while disabled|
+|Action_Grab|Grabbing another player|
+|Action_Grabbed|Grabbed by another player|
+|Action_LedgeGrab|Grabbing a ledge|
+|Action_LedgeHang|Hanging onto a ledge|
+|Action_LedgeClimb|Climbing up from a ledge|
+|Action_LedgeTeeter|Teetering before falling off a ledge|
+|Action_Turn|Turning while standing|
+|Action_TurnDash|Turning while dashing|
+|Action_TurnRun|Turning while running|
+|Action_TurnRunBrake|Turning while stopping running|
+|Action_JumpSquat|Prepare to jump|
+|Action_JumpForward|Jump forwards|
+|Action_JumpBackward|Jump backwards|
+|Action_JumpAerialForwards|Jump while in air|
+|Action_Squat|Crouching|
+|Action_SquatEnter|Enter Crouching|
+|Action_SquatEnter|Exiting Crouching|
+|Action_LandHeavy|Hardlanding|
+|Action_LandLight|Light landing|
+|Action_LandAerial|Land during an aerial attack|
+|Action_LandSpecial|Landing after falling helpless|
+|Action_ShieldEnter|Start shielding|
+|Action_Shield|Hold shield|
+|Action_ShieldExit|Stop shielding|
+|Action_ShieldStun|Broken shield|
+|Action_Escape|Spot dodge|
+|Action_EscapeForward|Roll forward|
+|Action_EscapeBackward|Roll backward|
+|Action_EscapeAir|Air dodge|
+|Action_Rebound|Clang|
+|Action_DamageFall|Tumble|
+
+Other non-reserved, but recommended states (names don't need to be exact):
+|Name|Description|
+|:---|:----------|
+|Action_Jab_{1, 2, 3}|Neutral Attack|
+|Action_AttackDash|Dash Attack|
+|Action_AttackUp|Up tilt|
+|Action_AttackSide|Forward tilt|
+|Action_AttackDown|Forward tilt|
+|Action_AttackSmashUpStart|Up smash windup|
+|Action_AttackSmashUpCharge|Charging Up smash|
+|Action_AttackSmashUp|Up smash|
+|Action_AttackSmashSideStart|Forward smash windup|
+|Action_AttackSmashSideCharge|Charging forward smash|
+|Action_AttackSmashSide|Forward smash|
+|Action_AttackSmashSideStart|Down smash windup|
+|Action_AttackSmashDownCharge|Charging down smash|
+|Action_AttackSmashDown|Down smash|
+|Action_AttackAir|Neutral air|
+|Action_AttackAirUp|Up air|
+|Action_AttackAirBack|Back air|
+|Action_AttackAirForward|Forward air|
+|Action_AttackAirDown|Forward air|
+|Action_Special|Neutral special|
+|Action_SpecialUp|Up special|
+|Action_SpecialDown|Down special|
+|Action_SpecialSide|Side special|
