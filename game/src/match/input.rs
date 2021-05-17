@@ -3,9 +3,9 @@ use fc_core::{input::*, player::Player};
 
 pub(super) fn sample_input(
     keyboard: Res<Input<KeyCode>>,
-    mut query: Query<(&InputSource, &mut PlayerInput), With<Player>>,
+    mut players: Query<(&InputSource, &mut PlayerInput), With<Player>>,
 ) {
-    for (mapping, mut player_input) in query.iter_mut() {
+    players.for_each_mut(|(mapping, mut player_input)| {
         player_input.tick();
         match mapping {
             InputSource::None | InputSource::CPU => {}
@@ -22,5 +22,5 @@ pub(super) fn sample_input(
             }
             InputSource::Gamepad { .. } => {}
         }
-    }
+    });
 }

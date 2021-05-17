@@ -44,23 +44,24 @@ fn start_debug(mut commands: Commands, asset_server: Res<AssetServer>) {
     });
 }
 
-fn update_fps_counter(diagnostics: Res<Diagnostics>, mut query: Query<&mut Text>) {
-    for mut text in query.iter_mut() {
-        if let Some(fps) = diagnostics.get(FrameTimeDiagnosticsPlugin::FPS) {
-            if let Some(average) = fps.average() {
-                text.sections[1].value = format!("{:.2}", average);
-            }
-        }
+fn update_fps_counter(diagnostics: Res<Diagnostics>, mut texts: Query<&mut Text>) {
+    let fps = diagnostics
+        .get(FrameTimeDiagnosticsPlugin::FPS)
+        .and_then(|fps| fps.average());
+    if let Some(fps) = fps {
+        texts.for_each_mut(|mut text| {
+            text.sections[1].value = format!("{:.2}", fps);
+        });
     }
 }
 
 fn draw_player_debug(
-    query: Query<(&Transform, &Body), With<Player>>,
+    bodies: Query<(&Transform, &Body), With<Player>>,
     mut lines: ResMut<DebugLines>,
 ) {
     const SIZE: f32 = 0.25;
     let mut total_bounds: Option<Bounds2D> = None;
-    for (transform, body) in query.iter() {
+    for (transform, body) in bodies.iter() {
         let mut ecb = body.ecb.clone();
         let mut center = transform.translation;
         center.z = 0.0;
@@ -99,25 +100,24 @@ fn draw_stage_debug(
     surfaces: Query<&Surface>,
     mut lines: ResMut<DebugLines>,
 ) {
-    for point in spawn.iter() {
+    spawn.for_each(|point| {
         lines.cross_2d(Vec3::from((point.position, 0.0)), CROSS_SIZE, Color::YELLOW);
-    }
-    for point in respawn.iter() {
-        let color = if point.occupied_by.is_none() {
-            Color::CYAN
-        } else {
-            Color::RED
+    });
+    respawn.for_each(|point| {
+        let color = match point.occupied_by {
+            Some(_) => Color::RED,
+            None => Color::CYAN,
         };
         lines.cross_2d(point.position.extend(0.0), CROSS_SIZE, color);
-    }
-    for blast_zone in blast_zones.iter() {
-        lines.bounds_2d(blast_zone.0, Color::MAROON);
-    }
-    for surface in surfaces.iter() {
+    });
+    blast_zones.for_each(|zone| {
+        lines.bounds_2d(zone.0, Color::MAROON);
+    });
+    surfaces.for_each(|surface| {
         let start = surface.start.point.extend(0.0);
         let end = surface.end.point.extend(0.0);
         lines.line_colored(start, end, Color::WHITE);
-    }
+    });
 }
 
 pub struct FcDebugPlugin;

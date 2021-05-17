@@ -208,7 +208,7 @@ impl From<EnvironmentCollisionBox> for Bounds2D {
 }
 
 fn move_players(mut players: Query<(&mut Body, &mut PlayerMovement, &PlayerInput)>) {
-    for (mut body, mut movement, input) in players.iter_mut() {
+    players.for_each_mut(|(mut body, mut movement, input)| {
         body.velocity.x = f32::from(input.current.movement.x) * 3.0;
 
         // Handle jumps
@@ -227,16 +227,16 @@ fn move_players(mut players: Query<(&mut Body, &mut PlayerMovement, &PlayerInput
                 body.velocity.y = power;
             }
         }
-    }
+    });
 }
 
 /// System to update existing bodies
 fn update_bodies(mut stage: StageContext, mut bodies: Query<(&mut Body, &mut Transform)>) {
-    for (mut body, mut transform) in bodies.iter_mut() {
+    bodies.for_each_mut(|(mut body, mut transform)| {
         body.advance_tick(&mut stage);
         // Update visual positions
         transform.translation = body.location.calculate_position(&mut stage);
-    }
+    });
 }
 
 pub(super) fn build(builder: &mut AppBuilder) {

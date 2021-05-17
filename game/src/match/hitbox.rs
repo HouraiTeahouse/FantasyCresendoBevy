@@ -59,7 +59,7 @@ fn update_hitboxes(
     players: Query<&CharacterFrame, With<Player>>,
     mut hitboxes: Query<&mut HitboxState>,
 ) {
-    for mut state in hitboxes.iter_mut() {
+    hitboxes.for_each_mut(|mut state| {
         let id = state.id;
         let player = match_state.players[state.player as usize];
         state.set_enabled(
@@ -68,7 +68,7 @@ fn update_hitboxes(
                 .map(|frame| (frame.active_hitboxes & (1 << id)) != 0)
                 .unwrap_or(false),
         );
-    }
+    })
 }
 
 fn collide_hitboxes(
@@ -76,9 +76,9 @@ fn collide_hitboxes(
     hurtboxes: Query<(&Hurtbox, &GlobalTransform)>,
     mut hits: EventWriter<HitCollision>,
 ) {
-    for (hitbox, state, hit_transform) in hitboxes.iter() {
+    hitboxes.for_each(|(hitbox, state, hit_transform)| {
         if !state.enabled {
-            continue;
+            return;
         }
         let hit_collider = Capsule3D {
             start: state.previous_position.unwrap_or(hit_transform.translation),
@@ -100,7 +100,7 @@ fn collide_hitboxes(
                 });
             }
         }
-    }
+    });
 }
 
 const BASE_KNOCKBACK_SCALING: f32 = 0.1;

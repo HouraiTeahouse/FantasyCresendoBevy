@@ -126,7 +126,7 @@ fn kill_players(
         .filter(|p| p.1.occupied_by.is_none())
         .collect();
     let bounds: Vec<&Bounds2D> = blast_zones.iter().map(|bz| &bz.0).collect();
-    for (mut damage, mut body, transform, player) in players.iter_mut() {
+    players.for_each_mut(|(mut damage, mut body, transform, player)| {
         let position = transform.translation.xy();
         if damage.is_alive() && !bounds.iter().any(|bounds| bounds.contains_point(position)) {
             damage.kill();
@@ -150,7 +150,7 @@ fn kill_players(
                 damage: damage.clone(),
             });
         }
-    }
+    });
 }
 
 pub(super) fn build(builder: &mut AppBuilder) {

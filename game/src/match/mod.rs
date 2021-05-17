@@ -154,13 +154,13 @@ fn cleanup_match(state: Res<MatchState>, mut commands: Commands) {
     commands.remove_resource::<MatchState>();
 }
 
-fn sample_frames(mut query: Query<(&mut CharacterFrame, &mut PlayerState, &StateMachine)>) {
-    for (mut frame, mut state, state_machine) in query.iter_mut() {
+fn sample_frames(mut players: Query<(&mut CharacterFrame, &mut PlayerState, &StateMachine)>) {
+    players.for_each_mut(|(mut frame, mut state, state_machine)| {
         state.tick();
         if let Some(sampled) = state_machine.sample_frame(&state) {
             *frame = sampled.clone();
         }
-    }
+    });
 }
 
 fn update_camera(
@@ -190,11 +190,11 @@ fn update_camera(
         return;
     }
     let rect_aspect = width / height;
-    for (mut transform, camera, projection) in cameras.iter_mut() {
+    cameras.for_each_mut(|(mut transform, camera, projection)| {
         if let Some(window) = windows.get(camera.window) {
             let (w_width, w_height) = (window.physical_width(), window.physical_height());
             if w_height == 0 {
-                continue;
+                return;
             }
             let aspect_ratio = (w_width as f32) / (w_height as f32);
 
@@ -216,7 +216,7 @@ fn update_camera(
         }
         transform.translation.x = total_bounds.center.x;
         transform.translation.y = total_bounds.center.y;
-    }
+    });
 }
 
 pub(self) fn on_match_update() -> SystemSet {
