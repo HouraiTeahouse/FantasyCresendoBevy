@@ -215,6 +215,13 @@ fn move_players(mut players: Query<(&mut Body, &mut PlayerMovement, &PlayerInput
         if body.location.is_grounded() {
             movement.reset_jumps();
             movement.fast_falling = false;
+
+            // FIXME: This should be driven by animation. This is a temporary holdover.
+            body.facing = match body.velocity.x {
+                x if x > 0.0 => Facing::Right,
+                x if x < 0.0 => Facing::Left,
+                _ => body.facing,
+            };
         } else {
             if body.is_falling() && input.move_diff().y() < -0.5 && input.current.movement.y() < 0.0
             {

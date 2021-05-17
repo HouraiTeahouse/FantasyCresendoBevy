@@ -65,7 +65,7 @@ fn draw_player_debug(
         let mut ecb = body.ecb.clone();
         let mut center = transform.translation;
         center.z = 0.0;
-        lines.cross_2d(center, SIZE, Color::GRAY);
+        lines.directed_cross_2d(center, SIZE, Color::GRAY, body.facing);
 
         ecb.translate(center.xy() - ecb.bottom());
 

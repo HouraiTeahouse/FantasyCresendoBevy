@@ -1,16 +1,15 @@
-use crate::geo::*;
+use crate::{geo::*, player::Facing};
 /// This is a fork of the bevy_debug_lines plugin that has no long term lines.
 /// All lines last only one frame.
 use bevy::prelude::*;
 use bevy::reflect::TypeUuid;
-use bevy::render::mesh::{Mesh, VertexAttributeValues};
-use bevy::render::pipeline::{
-    PipelineDescriptor, PrimitiveState, PrimitiveTopology, RenderPipeline,
+use bevy::render::{
+    mesh::{Mesh, VertexAttributeValues},
+    pipeline::{PipelineDescriptor, PrimitiveState, PrimitiveTopology, RenderPipeline},
+    render_graph::{base, AssetRenderResourcesNode, RenderGraph},
+    renderer::RenderResources,
+    shader::{ShaderStage, ShaderStages},
 };
-use bevy::render::render_graph::base;
-use bevy::render::render_graph::{AssetRenderResourcesNode, RenderGraph};
-use bevy::render::renderer::RenderResources;
-use bevy::render::shader::{ShaderStage, ShaderStages};
 
 pub struct DebugLinesPlugin;
 
@@ -249,6 +248,22 @@ impl DebugLines {
             center + Vec3::new(0.0, size, 0.0),
             color,
         );
+    }
+
+    pub fn directed_cross_2d(&mut self, center: Vec3, size: f32, color: Color, facing: Facing) {
+        let top = center + Vec3::new(0.0, -size, 0.0);
+        let bottom = center + Vec3::new(0.0, size, 0.0);
+        let left = center + Vec3::new(-size, 0.0, 0.0);
+        let right = center + Vec3::new(size, 0.0, 0.0);
+        let target = match facing {
+            Facing::Left => left,
+            Facing::Right => right,
+        };
+
+        self.line_colored(top, bottom, color);
+        self.line_colored(left, right, color);
+        self.line_colored(top, target, color);
+        self.line_colored(bottom, target, color);
     }
 
     pub fn cross_3d(&mut self, center: Vec3, size: f32, color: Color) {
