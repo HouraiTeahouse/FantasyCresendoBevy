@@ -6,7 +6,7 @@ use bevy::{
 };
 pub use fc_core::{debug::DebugLines, geo::*};
 use fc_core::{
-    debug::DebugLinesPlugin,
+    debug::{Capsule, DebugCapsulesPlugin, DebugLinesPlugin},
     player::Player,
     stage::{BlastZone, RespawnPoint, SpawnPoint, Surface},
 };
@@ -126,6 +126,7 @@ impl Plugin for FcDebugPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.add_plugin(FrameTimeDiagnosticsPlugin)
             .add_plugin(DebugLinesPlugin)
+            .add_plugin(DebugCapsulesPlugin)
             .add_startup_system(start_debug.system())
             .add_system(update_fps_counter.system())
             .add_system(draw_player_debug.system())
