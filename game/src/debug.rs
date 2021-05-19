@@ -1,17 +1,19 @@
-use crate::r#match::physics::Body;
+use crate::r#match::{hitbox::HitboxState, physics::Body};
 use bevy::{
     diagnostic::{Diagnostics, FrameTimeDiagnosticsPlugin},
     math::*,
     prelude::*,
 };
-pub use fc_core::{debug::DebugLines, geo::*};
 use fc_core::{
-    debug::{Capsule, DebugCapsulesPlugin, DebugLinesPlugin},
+    character::frame_data::{hitbox::Hitbox, hurtbox::Hurtbox},
+    debug::{Capsule, CapsuleGenerator, DebugCapsulesPlugin, DebugLinesPlugin},
     player::Player,
     stage::{BlastZone, RespawnPoint, SpawnPoint, Surface},
 };
+pub use fc_core::{debug::DebugLines, geo::*};
 
 const CROSS_SIZE: f32 = 0.25;
+const HITBOX_ALPHA: f32 = 0.25;
 
 fn start_debug(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.spawn_bundle(TextBundle {
@@ -120,6 +122,59 @@ fn draw_stage_debug(
     });
 }
 
+fn visualize_hitboxes(
+    mut commands: Commands,
+    generator: Res<CapsuleGenerator>,
+    hitboxes: Query<Entity, (With<Hitbox>, Without<Capsule>)>,
+) {
+    hitboxes.for_each(|hitbox| {
+        commands.entity(hitbox).insert_bundle(generator.create());
+    });
+}
+
+fn visualize_hurtboxes(
+    mut commands: Commands,
+    generator: Res<CapsuleGenerator>,
+    hurtboxes: Query<Entity, (With<Hurtbox>, Without<Capsule>)>,
+) {
+    hurtboxes.for_each(|hitbox| {
+        commands.entity(hitbox).insert_bundle(generator.create());
+    });
+}
+
+fn update_hitbox_debug(
+    mut hitboxes: Query<(
+        &Hitbox,
+        &HitboxState,
+        &GlobalTransform,
+        &mut Capsule,
+        &mut Visible,
+    )>,
+) {
+    hitboxes.for_each_mut(|(hitbox, state, transform, mut capsule, mut visible)| {
+        visible.is_visible = state.enabled;
+        capsule.start = transform.translation;
+        capsule.end = state.previous_position.unwrap_or(transform.translation);
+        capsule.radius = hitbox.radius;
+        capsule.color = hitbox.color();
+        capsule.color.set_a(HITBOX_ALPHA);
+    });
+}
+
+fn update_hurtbox_debug(
+    mut hitboxes: Query<(&Hurtbox, &GlobalTransform, &mut Capsule, &mut Visible)>,
+) {
+    hitboxes.for_each_mut(|(hurtbox, transform, mut capsule, mut visible)| {
+        let local_to_world = transform.compute_matrix();
+        visible.is_visible = hurtbox.is_enabled();
+        capsule.start = local_to_world.transform_point3(hurtbox.collider.start);
+        capsule.end = local_to_world.transform_point3(hurtbox.collider.end);
+        capsule.radius = transform.scale.max_element() * hurtbox.collider.radius;
+        capsule.color = hurtbox.r#type.color();
+        capsule.color.set_a(HITBOX_ALPHA);
+    });
+}
+
 pub struct FcDebugPlugin;
 
 impl Plugin for FcDebugPlugin {
@@ -130,6 +185,10 @@ impl Plugin for FcDebugPlugin {
             .add_startup_system(start_debug.system())
             .add_system(update_fps_counter.system())
             .add_system(draw_player_debug.system())
-            .add_system(draw_stage_debug.system());
+            .add_system(draw_stage_debug.system())
+            .add_system(visualize_hitboxes.system())
+            .add_system(visualize_hurtboxes.system())
+            .add_system(update_hitbox_debug.system())
+            .add_system(update_hurtbox_debug.system());
     }
 }

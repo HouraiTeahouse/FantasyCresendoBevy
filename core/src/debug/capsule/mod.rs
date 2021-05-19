@@ -17,6 +17,35 @@ impl Plugin for DebugCapsulesPlugin {
     }
 }
 
+pub struct CapsuleGenerator {
+    mesh: Handle<Mesh>,
+    pipelines: RenderPipelines,
+}
+
+impl CapsuleGenerator {
+    pub fn create(&self) -> CapsuleBundle {
+        CapsuleBundle {
+            mesh: self.mesh.clone_weak(),
+            pipelines: self.pipelines.clone(),
+            visible: Visible {
+                is_visible: true,
+                is_transparent: true,
+            },
+            ..Default::default()
+        }
+    }
+}
+
+#[derive(Bundle, Default)]
+pub struct CapsuleBundle {
+    mesh: Handle<Mesh>,
+    draw: Draw,
+    visible: Visible,
+    main_pass: base::MainPass,
+    pipelines: RenderPipelines,
+    capsule: Capsule,
+}
+
 #[derive(RenderResources, Default)]
 pub struct Capsule {
     pub start: Vec3,
@@ -32,7 +61,7 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut render_graph: ResMut<RenderGraph>,
 ) {
-    let mut pipeline_handle = pipelines.add(PipelineDescriptor::default_config(ShaderStages {
+    let pipeline_handle = pipelines.add(PipelineDescriptor::default_config(ShaderStages {
         vertex: shaders.add(Shader::from_glsl(
             ShaderStage::Vertex,
             include_str!("capsule.vert"),
@@ -49,47 +78,13 @@ fn setup(
         .add_node_edge("capsules", base::node::MAIN_PASS)
         .unwrap();
 
-    commands
-        .spawn()
-        .insert(meshes.add(Mesh::from(shape::Icosphere {
+    commands.insert_resource(CapsuleGenerator {
+        mesh: meshes.add(Mesh::from(shape::Icosphere {
             radius: 1.0,
             subdivisions: 3,
-        })))
-        .insert(RenderPipelines::from_pipelines(vec![RenderPipeline::new(
+        })),
+        pipelines: RenderPipelines::from_pipelines(vec![RenderPipeline::new(
             pipeline_handle.clone(),
-        )]))
-        .insert(Draw::default())
-        .insert(base::MainPass::default())
-        .insert(Visible {
-            is_visible: true,
-            is_transparent: true,
-        })
-        .insert(Capsule {
-            start: (1.0, 1.0, 0.0).into(),
-            end: (0.0, 2.0, 0.0).into(),
-            radius: 0.5,
-            color: Color::rgba(1.0, 1.0, 0.0, 0.25),
-        });
-
-    commands
-        .spawn()
-        .insert(meshes.add(Mesh::from(shape::Icosphere {
-            radius: 1.0,
-            subdivisions: 3,
-        })))
-        .insert(RenderPipelines::from_pipelines(vec![RenderPipeline::new(
-            pipeline_handle,
-        )]))
-        .insert(Draw::default())
-        .insert(base::MainPass::default())
-        .insert(Visible {
-            is_visible: true,
-            is_transparent: true,
-        })
-        .insert(Capsule {
-            start: (2.0, 0.0, 0.0).into(),
-            end: (4.0, 1.0, 0.0).into(),
-            radius: 0.25,
-            color: Color::rgba(1.0, 0.0, 0.0, 0.25),
-        });
+        )]),
+    });
 }

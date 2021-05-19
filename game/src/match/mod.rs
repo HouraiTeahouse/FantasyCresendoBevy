@@ -15,7 +15,7 @@ use fc_core::{
 use serde::{Deserialize, Serialize};
 
 mod events;
-mod hitbox;
+pub mod hitbox;
 mod input;
 pub mod physics;
 pub mod player;

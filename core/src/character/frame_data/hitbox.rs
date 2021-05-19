@@ -1,4 +1,5 @@
 use super::ScalableValue;
+use bevy::render::color::Color;
 use serde::{Deserialize, Serialize};
 use std::cmp::{Ord, Ordering, PartialOrd};
 
@@ -49,4 +50,10 @@ pub struct Hitbox {
     pub knockback_angle: f32,
     pub knockback_force: ScalableValue,
     pub hitstun: ScalableValue,
+}
+
+impl Hitbox {
+    pub fn color(&self) -> Color {
+        Color::RED
+    }
 }

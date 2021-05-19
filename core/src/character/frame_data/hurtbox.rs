@@ -3,7 +3,7 @@ use super::{
     ScalableValue,
 };
 use crate::{geo::Capsule3D, player::PlayerId};
-use bevy::transform::components::GlobalTransform;
+use bevy::{render::color::Color, transform::components::GlobalTransform};
 
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -14,6 +14,19 @@ pub enum HurtboxType {
     Invincible,
     Grazing,
     Shield,
+}
+
+impl HurtboxType {
+    pub fn color(&self) -> Color {
+        match self {
+            Self::Inactive => Color::GRAY,
+            Self::Damageable => Color::YELLOW,
+            Self::Intangible => Color::BLUE,
+            Self::Invincible => Color::GREEN,
+            Self::Grazing => Color::PURPLE,
+            Self::Shield => Color::PINK,
+        }
+    }
 }
 
 #[derive(Clone, Debug)]
