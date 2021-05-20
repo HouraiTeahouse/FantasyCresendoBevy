@@ -17,3 +17,13 @@ gameplay items of Fantasy Crescendo.
 This is still an experiment. It's unknown if this implementation is going to
 supplant the Unity implementation, be used as a simulation layer, or whatever
 else.
+
+## Development Environment Setup
+
+Local development environment requires the following:
+ 
+ * [rust/cargo 1.52+](https://www.rust-lang.org/tools/install)
+ * [LLVM/Clang 12.0.0](https://github.com/llvm/llvm-project/releases/tag/llvmorg-12.0.0)
+
+The project currently will only build on nightly due to the use of an unstable cargo 
+feature that has not landed in stable yet. Use `rustup` to switch to nightly Rust.
