@@ -19,8 +19,10 @@ opt-level = 3
 panic = "abort"
 
 [features]
-default = []
+default = ["x11"]
 steam-restart = []
+x11 = ["bevy/x11"]
+wayland = ["bevy/wayland"]
 
 [dependencies]
 bitflags = "1.2"

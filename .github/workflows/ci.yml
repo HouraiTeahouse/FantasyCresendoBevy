@@ -44,11 +44,13 @@ jobs:
 
       - name: Run clippy
         uses: actions-rs/clippy-check@v1
+        if: runner.os == 'linux'
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           args: --workspace --tests
 
       - name: Run cargo fmt
+        if: runner.os == 'linux'
         run: cargo fmt --all -- --check
 
       - name: Run cargo test
