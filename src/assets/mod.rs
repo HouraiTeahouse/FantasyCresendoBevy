@@ -1,13 +1,13 @@
-use crate::AppState;
+use crate::{
+    character::{state::StateMachine, CharacterAsset},
+    r#match::stage::StageAsset,
+    AppState,
+};
 use bevy::{
     asset::{AssetLoader, LoadContext, LoadState, LoadedAsset},
     prelude::*,
     reflect::TypeUuid,
     utils::BoxedFuture,
-};
-use fc_core::{
-    character::{state::StateMachine, CharacterAsset},
-    stage::StageAsset,
 };
 
 struct FcAssetLoader<T> {

@@ -1,7 +1,6 @@
-use super::{on_match_update, player::PlayerMovement, stage::StageContext};
-use crate::time::FrameTimer;
+use super::{input::PlayerInput, on_match_update, player::PlayerMovement, stage::StageContext};
+use crate::{geo::*, time::FrameTimer};
 use bevy::{math::*, prelude::*};
-use fc_core::{geo::*, input::PlayerInput, player::Facing};
 
 // TODO(james7132): Make these game config options.
 const DELTA_TIME: f32 = 1.0 / 60.0;
@@ -54,6 +53,39 @@ impl Location {
 impl Default for Location {
     fn default() -> Self {
         Self::Airborne(Vec2::ZERO)
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum Facing {
+    Left = 0,
+    Right = 1,
+}
+
+impl Default for Facing {
+    fn default() -> Self {
+        Self::Left
+    }
+}
+
+impl Facing {
+    pub fn is_left(&self) -> bool {
+        *self == Self::Left
+    }
+
+    pub fn is_right(&self) -> bool {
+        *self == Self::Left
+    }
+
+    pub fn invert(&mut self) {
+        *self = self.inverted()
+    }
+
+    pub fn inverted(&self) -> Self {
+        match self {
+            Self::Left => Self::Right,
+            Self::Right => Self::Left,
+        }
     }
 }
 

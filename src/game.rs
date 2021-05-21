@@ -1,15 +1,17 @@
 #[macro_use]
 extern crate bitflags;
 
+use crate::{player, r#match::input::*};
 #[windows_subsystem = "windows"]
 use bevy::prelude::*;
 use bevy_steamworks::{AppId, SteamworksPlugin};
-use fc_core::input::*;
 use std::collections::HashMap;
 
-mod data;
+mod assets;
+mod character;
 #[cfg(debug_assertions)]
 mod debug;
+mod geo;
 mod input;
 mod r#match;
 mod time;
@@ -38,7 +40,7 @@ fn create_input_source(arrow: ButtonAxis2D<KeyCode>, jump: KeyCode) -> InputSour
 }
 
 fn main() {
-    // Restart the game if need be through Steam, otherwise set the AppId 
+    // Restart the game if need be through Steam, otherwise set the AppId
     // to ensure proper initialzation.
     #[cfg(feature = "steam-restart")]
     if bevy_steamworks::restart_app_if_necessary(STEAM_APP_ID) {
@@ -63,7 +65,7 @@ fn main() {
     .add_plugins(DefaultPlugins)
     .add_plugin(SteamworksPlugin)
     .add_plugin(input::FcInputPlugin)
-    .add_plugin(data::FcAssetsPlugin)
+    .add_plugin(assets::FcAssetsPlugin)
     .add_plugin(r#match::FcMatchPlugin)
     .insert_resource(Msaa { samples: 1 })
     .insert_resource(MatchConfig {

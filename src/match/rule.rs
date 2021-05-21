@@ -4,8 +4,8 @@ use super::{
     player::{PlayerConfig, PlayerDamage},
     MatchConfig, MatchResult, MatchState,
 };
+use crate::player::Player;
 use bevy::{app::AppExit, prelude::*};
-use fc_core::player::Player;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone)]

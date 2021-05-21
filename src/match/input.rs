@@ -1,5 +1,9 @@
-use bevy::math::{Vec2, Vec3};
-use bevy_input::{gamepad::GamepadButton, keyboard::KeyCode, Input};
+use super::player::Player;
+use bevy::{
+    input::{gamepad::GamepadButton, keyboard::KeyCode, Input},
+    math::{Vec2, Vec3},
+    prelude::*,
+};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::{
@@ -302,4 +306,28 @@ impl<T: Copy + Eq + Hash> ButtonMapping<T> {
         }
         return false;
     }
+}
+
+pub(super) fn sample_input(
+    keyboard: Res<Input<KeyCode>>,
+    mut players: Query<(&InputSource, &mut PlayerInput), With<Player>>,
+) {
+    players.for_each_mut(|(mapping, mut player_input)| {
+        player_input.tick();
+        match mapping {
+            InputSource::None | InputSource::CPU => {}
+            InputSource::Keyboard {
+                movement,
+                smash,
+                buttons,
+            } => {
+                player_input.current = PlayerInputFrame {
+                    movement: movement.sample(&keyboard),
+                    smash: smash.sample(&keyboard),
+                    buttons: buttons.evaluate_all(&keyboard),
+                };
+            }
+            InputSource::Gamepad { .. } => {}
+        }
+    });
 }

@@ -1,26 +1,25 @@
-use self::player::*;
-use crate::AppState;
+use self::{player::*, stage::*};
+use crate::{
+    character::{frame_data::*, state::*},
+    geo::*,
+    player::Player,
+    AppState,
+};
 use bevy::{
     math::*,
     prelude::*,
     render::camera::{Camera, PerspectiveProjection},
     window::Windows,
 };
-use fc_core::{
-    character::{frame_data::*, state::*},
-    geo::*,
-    player::Player,
-    stage::*,
-};
 use serde::{Deserialize, Serialize};
 
-mod events;
+pub mod events;
 pub mod hitbox;
-mod input;
+pub mod input;
 pub mod physics;
 pub mod player;
 pub mod rule;
-mod stage;
+pub mod stage;
 
 pub const MAX_PLAYERS_PER_MATCH: usize = 4;
 

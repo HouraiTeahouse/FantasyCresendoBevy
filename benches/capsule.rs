@@ -1,5 +1,5 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use fc_core::geo::Capsule3D;
+use fc::geo::Capsule3D;
 
 fn criterion_benchmark(c: &mut Criterion) {
     let sphere_a = Capsule3D::sphere((0.0, 0.0, 0.0), 3.0);

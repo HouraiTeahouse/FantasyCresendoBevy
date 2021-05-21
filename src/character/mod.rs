@@ -14,9 +14,3 @@ pub struct CharacterAsset {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CharacterPallette {}
-
-#[repr(u8)]
-pub enum Facing {
-    Left,
-    Right,
-}

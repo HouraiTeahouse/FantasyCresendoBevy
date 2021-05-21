@@ -1,12 +1,15 @@
 use super::{
-    on_match_update, physics::Body, player::PlayerDamage, stage::StageContext, MatchState,
+    on_match_update,
+    physics::Body,
+    player::{Player, PlayerDamage, PlayerId},
+    stage::StageContext,
+    MatchState,
 };
-use bevy::prelude::*;
-use fc_core::{
+use crate::{
     character::frame_data::{hitbox::Hitbox, hurtbox::Hurtbox, *},
     geo::Capsule3D,
-    player::{Player, PlayerId},
 };
+use bevy::prelude::*;
 use std::collections::HashMap;
 
 #[derive(Clone, Debug, Default)]

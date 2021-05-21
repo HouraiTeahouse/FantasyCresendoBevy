@@ -1,4 +1,4 @@
-use crate::{geo::*, player::Facing};
+use crate::{geo::*, r#match::physics::Facing};
 /// This is a fork of the bevy_debug_lines plugin that has no long term lines.
 /// All lines last only one frame.
 use bevy::prelude::*;

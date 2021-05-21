@@ -1,16 +1,24 @@
-use crate::r#match::{hitbox::HitboxState, physics::Body};
+mod capsule;
+mod line;
+
+use self::capsule::{Capsule, CapsuleGenerator, DebugCapsulesPlugin};
+use self::line::{DebugLines, DebugLinesPlugin};
+
+use crate::{
+    character::frame_data::{hitbox::Hitbox, hurtbox::Hurtbox},
+    geo::*,
+    player::Player,
+    r#match::{
+        hitbox::HitboxState,
+        physics::Body,
+        stage::{BlastZone, RespawnPoint, SpawnPoint, Surface},
+    },
+};
 use bevy::{
     diagnostic::{Diagnostics, FrameTimeDiagnosticsPlugin},
     math::*,
     prelude::*,
 };
-use fc_core::{
-    character::frame_data::{hitbox::Hitbox, hurtbox::Hurtbox},
-    debug::{Capsule, CapsuleGenerator, DebugCapsulesPlugin, DebugLinesPlugin},
-    player::Player,
-    stage::{BlastZone, RespawnPoint, SpawnPoint, Surface},
-};
-pub use fc_core::{debug::DebugLines, geo::*};
 
 const CROSS_SIZE: f32 = 0.25;
 const HITBOX_ALPHA: f32 = 0.25;

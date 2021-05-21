@@ -2,6 +2,7 @@ name: CI
 
 on:
   pull_request:
+    branches: [main]
   push:
     branches: [main]
 
@@ -25,14 +26,6 @@ jobs:
 
       - name: Install alsa and udev
         run: sudo apt-get update; sudo apt-get install --no-install-recommends libasound2-dev libudev-dev
-        if: runner.os == 'linux'
-
-      - name: Check the format
-        run: cargo run --all --check
-        if: runner.os == 'linux'
-
-      - name: Run clippy
-        run: cargo clippy --workspace --all-targets --all-features
         if: runner.os == 'linux'
 
       - name: Build & run tests

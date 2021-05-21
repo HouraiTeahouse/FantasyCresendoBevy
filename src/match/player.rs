@@ -1,13 +1,20 @@
-use super::{hitbox, physics};
-use bevy::prelude::*;
-use fc_core::{
-    character::{frame_data::*, state::*},
-    input::*,
-    player::*,
+use super::{
+    hitbox,
+    input::{InputSource, PlayerInput},
+    physics,
 };
+use crate::character::{frame_data::*, state::*};
+use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
 const PLAYER_COLORS: &[Color] = &[Color::RED, Color::BLUE, Color::YELLOW, Color::GREEN];
+
+pub type PlayerId = u8;
+
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
+pub struct Player {
+    pub id: PlayerId,
+}
 
 #[derive(Clone, Deserialize, Serialize)]
 pub struct PlayerConfig {

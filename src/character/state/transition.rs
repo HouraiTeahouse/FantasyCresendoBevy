@@ -1,5 +1,5 @@
 use super::state::StateId;
-use crate::input::Buttons;
+use crate::r#match::input::Buttons;
 use serde::{Deserialize, Serialize};
 
 #[derive(Default, Debug, Serialize, Deserialize)]
