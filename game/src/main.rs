@@ -3,6 +3,7 @@ extern crate bitflags;
 
 #[windows_subsystem = "windows"]
 use bevy::prelude::*;
+use bevy_steamworks::{AppId, SteamworksPlugin};
 use fc_core::input::*;
 use std::collections::HashMap;
 
@@ -14,6 +15,8 @@ mod r#match;
 mod time;
 
 use r#match::*;
+
+const STEAM_APP_ID: AppId = AppId(774701);
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum AppState {
@@ -35,6 +38,21 @@ fn create_input_source(arrow: ButtonAxis2D<KeyCode>, jump: KeyCode) -> InputSour
 }
 
 fn main() {
+    // Restart the game if need be through Steam, otherwise set the AppId 
+    // to ensure proper initialzation.
+    #[cfg(feature = "steam-restart")]
+    if bevy_steamworks::restart_app_if_necessary(STEAM_APP_ID) {
+        return;
+    }
+
+    {
+        let app_id = STEAM_APP_ID.clone().0.to_string();
+        std::env::set_var("SteamAppId", &app_id);
+        std::env::set_var("SteamGameId", app_id);
+    }
+
+    println!("{:?}", std::env::current_dir().unwrap());
+
     let mut app = App::build();
     app.insert_resource(WindowDescriptor {
         title: "Fantasy Crescendo".to_string(),
@@ -43,6 +61,7 @@ fn main() {
     })
     .add_state(AppState::STARTUP)
     .add_plugins(DefaultPlugins)
+    .add_plugin(SteamworksPlugin)
     .add_plugin(input::FcInputPlugin)
     .add_plugin(data::FcAssetsPlugin)
     .add_plugin(r#match::FcMatchPlugin)
