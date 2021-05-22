@@ -20,6 +20,7 @@ pub mod hitbox;
 pub mod input;
 pub mod physics;
 pub mod player;
+pub mod rollback;
 pub mod rule;
 pub mod stage;
 
@@ -52,7 +53,7 @@ pub enum MatchConfigValidationError {
     NotEnoughPlayers,
 }
 
-#[derive(Debug, Default)]
+#[derive(Clone, Debug, Default)]
 pub struct MatchState {
     /// The number of frames remaining before the end of the match.
     /// If None, the match has no set time limit.

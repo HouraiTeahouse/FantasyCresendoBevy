@@ -29,6 +29,7 @@ bevy-steamworks = "0.1"
 anyhow = "1.0"
 serde_json = "1.0"
 libm = "0.2"
+ringbuffer = "0.7"
 
 [dependencies.bevy]
 version = "0.5"

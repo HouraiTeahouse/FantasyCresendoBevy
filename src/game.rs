@@ -58,7 +58,7 @@ fn main() {
     let mut app = App::build();
     app.insert_resource(WindowDescriptor {
         title: "Fantasy Crescendo".to_string(),
-        vsync: true,
+        //vsync: true,
         ..Default::default()
     })
     .add_state(AppState::STARTUP)
