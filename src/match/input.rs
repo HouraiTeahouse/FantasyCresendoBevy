@@ -290,13 +290,7 @@ impl<T: Copy + Eq + Hash> ButtonMapping<T> {
         Buttons::ALL
             .iter()
             .cloned()
-            .reduce(|a, b| {
-                if self.evaluate(b, input) {
-                    a | b
-                } else {
-                    a
-                }
-            })
+            .reduce(|a, b| if self.evaluate(b, input) { a | b } else { a })
             .unwrap_or(Buttons::empty())
     }
 
