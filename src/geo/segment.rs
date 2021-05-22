@@ -158,8 +158,16 @@ impl LineSegment3D {
             }
         }
         // finally do the division to get sc and tc
-        let sc = if s_n.abs() < SMALL_NUM { 0.0 } else { s_n / s_d };
-        let tc = if t_n.abs() < SMALL_NUM { 0.0 } else { t_n / t_d };
+        let sc = if s_n.abs() < SMALL_NUM {
+            0.0
+        } else {
+            s_n / s_d
+        };
+        let tc = if t_n.abs() < SMALL_NUM {
+            0.0
+        } else {
+            t_n / t_d
+        };
 
         // get the difference of the two closest points
         let dp = w + (sc * u) - (tc * v); // =  S1(sc) - S2(tc)

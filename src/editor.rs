@@ -1,3 +1,5 @@
+#![allow(clippy::float_cmp)]
+
 use bevy::prelude::*;
 
 fn main() {
