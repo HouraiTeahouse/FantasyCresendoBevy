@@ -1,6 +1,5 @@
 use super::{
     events::PlayerDied,
-    on_match_update,
     player::{PlayerConfig, PlayerDamage},
     MatchConfig, MatchResult, MatchState,
 };
@@ -115,7 +114,7 @@ impl MatchRule {
     }
 }
 
-fn update_match_state(
+pub(super) fn update_match_state(
     config: Res<MatchConfig>,
     mut state: ResMut<MatchState>,
     mut results: ResMut<MatchResult>,
@@ -130,7 +129,7 @@ fn update_match_state(
     }
 }
 
-fn on_player_died(
+pub(super) fn on_player_died(
     mut events: EventReader<PlayerDied>,
     config: Res<MatchConfig>,
     mut results: ResMut<MatchResult>,
@@ -147,7 +146,7 @@ fn on_player_died(
 }
 
 // FIXME(james7132): Sending an AppExit is not a viable long term approach, fix this.
-fn finish_match(result: Res<MatchResult>, mut exit: EventWriter<bevy::app::AppExit>) {
+pub(super) fn finish_match(result: Res<MatchResult>, mut exit: EventWriter<bevy::app::AppExit>) {
     match &result.winner {
         MatchWinner::Undecided => {}
         winner => {
@@ -155,13 +154,4 @@ fn finish_match(result: Res<MatchResult>, mut exit: EventWriter<bevy::app::AppEx
             exit.send(AppExit);
         }
     }
-}
-
-pub(super) fn build(builder: &mut AppBuilder) {
-    builder.add_system_set(
-        on_match_update()
-            .with_system(update_match_state.system())
-            .with_system(finish_match.system())
-            .with_system(on_player_died.system()),
-    );
 }

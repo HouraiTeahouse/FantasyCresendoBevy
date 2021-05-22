@@ -1,3 +1,6 @@
+// TODO(james7132): Make these game config options.
+pub const DELTA_TIME: f32 = 1.0 / 60.0;
+
 /// A simple timer for keeping track of countdowns in the number of game ticks
 /// that pass. Supports
 #[derive(Clone, Debug)]

@@ -287,13 +287,11 @@ pub struct ButtonMapping<T>(pub HashMap<Buttons, Vec<T>>);
 
 impl<T: Copy + Eq + Hash> ButtonMapping<T> {
     pub fn evaluate_all(&self, input: &Input<T>) -> Buttons {
-        let mut buttons = Buttons::empty();
-        for button in Buttons::ALL {
-            if self.evaluate(*button, input) {
-                buttons.insert(*button);
-            }
-        }
-        buttons
+        Buttons::ALL
+            .iter()
+            .cloned()
+            .reduce(|a, b| if self.evaluate(b, input) { a | b } else { a })
+            .unwrap_or(Buttons::empty())
     }
 
     pub fn evaluate(&self, button: Buttons, input: &Input<T>) -> bool {

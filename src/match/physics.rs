@@ -1,9 +1,11 @@
-use super::{input::PlayerInput, on_match_update, player::PlayerMovement, stage::StageContext};
-use crate::{geo::*, time::FrameTimer};
+use super::{input::PlayerInput, player::PlayerMovement, stage::StageContext};
+use crate::{
+    geo::*,
+    time::{FrameTimer, DELTA_TIME},
+};
 use bevy::{math::*, prelude::*};
 
 // TODO(james7132): Make these game config options.
-const DELTA_TIME: f32 = 1.0 / 60.0;
 const LAUNCH_DRAG: f32 = 3.06;
 const UNGROUND_THRESHOLD: f32 = 50.0;
 
@@ -239,7 +241,7 @@ impl From<EnvironmentCollisionBox> for Bounds2D {
     }
 }
 
-fn move_players(mut players: Query<(&mut Body, &mut PlayerMovement, &PlayerInput)>) {
+pub(super) fn move_players(mut players: Query<(&mut Body, &mut PlayerMovement, &PlayerInput)>) {
     players.for_each_mut(|(mut body, mut movement, input)| {
         body.velocity.x = f32::from(input.current.movement.x) * 3.0;
 
@@ -270,18 +272,13 @@ fn move_players(mut players: Query<(&mut Body, &mut PlayerMovement, &PlayerInput
 }
 
 /// System to update existing bodies
-fn update_bodies(mut stage: StageContext, mut bodies: Query<(&mut Body, &mut Transform)>) {
+pub(super) fn update_bodies(
+    mut stage: StageContext,
+    mut bodies: Query<(&mut Body, &mut Transform)>,
+) {
     bodies.for_each_mut(|(mut body, mut transform)| {
         body.advance_tick(&mut stage);
         // Update visual positions
         transform.translation = body.location.calculate_position(&mut stage);
     });
-}
-
-pub(super) fn build(builder: &mut AppBuilder) {
-    builder.add_system_set(
-        on_match_update()
-            .with_system(update_bodies.system())
-            .with_system(move_players.system()),
-    );
 }

@@ -1,6 +1,5 @@
 use super::{
     events::PlayerDied,
-    on_match_update,
     physics::{Body, Facing, Location},
     player::{Player, PlayerDamage},
 };
@@ -268,7 +267,7 @@ fn setup_stage(mut commands: Commands) {
 }
 
 // TODO(james7132): This is fucknormous, simplify or split this system.
-fn kill_players(
+pub(super) fn kill_players(
     blast_zones: Query<&BlastZone>,
     mut respawn_points: Query<(Entity, &mut RespawnPoint)>,
     mut players: Query<(&mut PlayerDamage, &mut Body, &Transform, &Player)>,
@@ -307,7 +306,5 @@ fn kill_players(
 }
 
 pub(super) fn build(builder: &mut AppBuilder) {
-    builder
-        .add_startup_system(setup_stage.system())
-        .add_system_set(on_match_update().with_system(kill_players.system()));
+    builder.add_startup_system(setup_stage.system());
 }

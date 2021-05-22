@@ -3,9 +3,11 @@ use crate::{
     character::{frame_data::*, state::*},
     geo::*,
     player::Player,
+    time::DELTA_TIME,
     AppState,
 };
 use bevy::{
+    core::FixedTimestep,
     math::*,
     prelude::*,
     render::camera::{Camera, PerspectiveProjection},
@@ -218,9 +220,10 @@ fn update_camera(
     });
 }
 
-pub(self) fn on_match_update() -> SystemSet {
-    SystemSet::on_update(AppState::MATCH)
-}
+#[derive(Debug, Hash, PartialEq, Eq, Clone, StageLabel)]
+struct MatchUpdateStage;
+
+const MATCH_UPDATE_LABEL: &str = "MATCH_UPDATE";
 
 pub struct FcMatchPlugin;
 
@@ -232,15 +235,85 @@ impl Plugin for FcMatchPlugin {
             .add_system_set(SystemSet::on_enter(AppState::MATCH).with_system(init_match.system()))
             .add_system_set(SystemSet::on_exit(AppState::MATCH).with_system(cleanup_match.system()))
             .add_system_set(
-                on_match_update()
-                    .with_system(sample_frames.system())
-                    .with_system(input::sample_input.system())
-                    .with_system(update_camera.system()),
+                SystemSet::on_update(AppState::MATCH).with_system(update_camera.system()),
+            )
+            .add_stage_after(
+                CoreStage::Update,
+                MatchUpdateStage,
+                // INVARIANT: SystemStage::single_threaded **must** follow system insertion order.
+                SystemStage::single_threaded()
+                    .with_run_criteria(
+                        FixedTimestep::step(DELTA_TIME.into()).with_label(MATCH_UPDATE_LABEL),
+                    )
+                    // Update inputs
+                    .with_system(input::sample_input.system().label("SAMPLE_INPUT"))
+                    // Run physics updates
+                    .with_system(
+                        physics::move_players
+                            .system()
+                            .label("MOVE_PLAYERS")
+                            .after("SAMPLE_INPUT"),
+                    )
+                    .with_system(
+                        physics::update_bodies
+                            .system()
+                            .label("UPDATE_BODIES")
+                            .after("MOVE_PLAYERS"),
+                    )
+                    // Update animations
+                    .with_system(
+                        sample_frames
+                            .system()
+                            .label("SAMPLE_FRAMES")
+                            .after("UPDATE_BODIES"),
+                    )
+                    // Updated hitboxes and players
+                    .with_system(
+                        hitbox::update_hitboxes
+                            .system()
+                            .label("UPDATE_HITBOXES")
+                            .after("SAMPLE_FRAMES"),
+                    )
+                    .with_system(
+                        hitbox::collide_hitboxes
+                            .system()
+                            .label("COLLIDE_HITBOXES")
+                            .after("UPDATE_HITBOXES"),
+                    )
+                    .with_system(
+                        hitbox::hit_players
+                            .system()
+                            .label("HIT_PLAYERS")
+                            .after("COLLIDE_HITBOXES"),
+                    )
+                    .with_system(
+                        stage::kill_players
+                            .system()
+                            .label("KILL PLAYERS")
+                            .after("HIT_PLAYERS"),
+                    )
+                    // Evaluate the match state
+                    .with_system(
+                        rule::update_match_state
+                            .system()
+                            .label("UPDATE_MATCH_STATE")
+                            .after("KILL_PLAYERS"),
+                    )
+                    .with_system(
+                        rule::on_player_died
+                            .system()
+                            .label("ON_PLAYER_DIED")
+                            .after("UPDATE_MATCH_STATE"),
+                    )
+                    .with_system(
+                        rule::finish_match
+                            .system()
+                            .label("FINISH_MATCH")
+                            .after("ON_PLAYER_DIED"),
+                    ),
             );
         stage::build(builder);
-        events::build(builder);
-        rule::build(builder);
-        physics::build(builder);
         hitbox::build(builder);
+        events::build(builder);
     }
 }

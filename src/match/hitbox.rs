@@ -1,5 +1,4 @@
 use super::{
-    on_match_update,
     physics::Body,
     player::{Player, PlayerDamage, PlayerId},
     stage::StageContext,
@@ -57,7 +56,7 @@ pub(super) fn create_player_hitboxes(player: PlayerId) -> impl Iterator<Item = H
         })
 }
 
-fn update_hitboxes(
+pub(super) fn update_hitboxes(
     match_state: Res<MatchState>,
     players: Query<&CharacterFrame, With<Player>>,
     mut hitboxes: Query<&mut HitboxState>,
@@ -74,7 +73,7 @@ fn update_hitboxes(
     })
 }
 
-fn collide_hitboxes(
+pub(super) fn collide_hitboxes(
     hitboxes: Query<(&Hitbox, &HitboxState, &GlobalTransform)>,
     hurtboxes: Query<(&Hurtbox, &GlobalTransform)>,
     mut hits: EventWriter<HitCollision>,
@@ -109,7 +108,8 @@ fn collide_hitboxes(
 const BASE_KNOCKBACK_SCALING: f32 = 0.1;
 const IMPACT_KNOCKBACK_SCALING: f32 = 0.05;
 
-fn hit_players(
+pub(super) fn hit_players(
+    // TODO(james7132): Replace this with EventConsumer
     mut hits: EventReader<HitCollision>,
     match_state: Res<MatchState>,
     mut players: Query<(&mut PlayerDamage, &mut Body), With<Player>>,
@@ -148,10 +148,5 @@ fn hit_players(
 }
 
 pub(super) fn build(builder: &mut AppBuilder) {
-    builder.add_event::<HitCollision>().add_system_set(
-        on_match_update()
-            .with_system(update_hitboxes.system())
-            .with_system(collide_hitboxes.system())
-            .with_system(hit_players.system()),
-    );
+    builder.add_event::<HitCollision>();
 }
