@@ -1,29 +1,19 @@
 use super::{
-    super::MAX_PLAYERS_PER_MATCH,
     input::{GameInput, InputQueue},
-    Frame,
+    protocol::ConnectionStatus,
+    Frame, RollbackConfig, RollbackError, RollbackResult, SessionCallbacks,
 };
 use bevy::log::*;
+use std::sync::{Arc, RwLock};
 
 const MAX_PREDICTION_FRAMES: usize = 8;
 
-pub enum RollbackError {
-    ReachedPredictionBarrier,
-}
-
-pub trait SessionCallbacks {}
-
-pub struct Config<Input> {
-    callbacks: Box<dyn SessionCallbacks>,
-    max_prediction_frames: i32,
-    num_players: usize,
-    _marker: std::marker::PhantomData<Input>,
-}
-
-#[derive(Default)]
-pub struct ConnectionStatus {
-    disconnected: bool,
-    last_frame: Frame,
+pub struct Config<T>
+where
+    T: RollbackConfig,
+{
+    pub callbacks: Box<dyn SessionCallbacks<T>>,
+    pub player_count: usize,
 }
 
 // struct Event {
@@ -45,13 +35,16 @@ impl DisconnectedError {
     }
 }
 
-pub struct SavedFrame<T> {
+pub struct SavedFrame<T>
+where
+    T: RollbackConfig,
+{
     frame: super::Frame,
-    data: Option<Box<T>>,
+    data: Option<Box<T::State>>,
     checksum: i32,
 }
 
-impl<T> Default for SavedFrame<T> {
+impl<T: RollbackConfig> Default for SavedFrame<T> {
     fn default() -> Self {
         Self {
             frame: super::NULL_FRAME,
@@ -61,12 +54,15 @@ impl<T> Default for SavedFrame<T> {
     }
 }
 
-pub struct SavedState<T> {
+pub struct SavedState<T>
+where
+    T: RollbackConfig,
+{
     head: usize,
     frames: [SavedFrame<T>; MAX_PREDICTION_FRAMES + 2],
 }
 
-impl<T> Default for SavedState<T> {
+impl<T: RollbackConfig> Default for SavedState<T> {
     fn default() -> Self {
         Self {
             head: 0,
@@ -75,23 +71,26 @@ impl<T> Default for SavedState<T> {
     }
 }
 
-pub struct RollbackSync<State, Input> {
-    saved_state: SavedState<State>,
-    local_connect_status: [ConnectionStatus; MAX_PLAYERS_PER_MATCH],
-    input_queues: Vec<InputQueue<Input>>,
-    config: Config<Input>,
+pub struct RollbackSync<T>
+where
+    T: RollbackConfig,
+{
+    saved_state: SavedState<T>,
+    input_queues: Vec<InputQueue<T>>,
+    config: Config<T>,
     rolling_back: bool,
 
     last_confirmed_frame: Frame,
     frame_count: Frame,
+    local_connect_status: Arc<[RwLock<ConnectionStatus>]>,
 }
 
-impl<State, Input: Default + Eq + Clone> RollbackSync<State, Input> {
-    pub fn new(config: Config<Input>) -> Self {
+impl<T: RollbackConfig> RollbackSync<T> {
+    pub fn new(config: Config<T>, local_connect_status: Arc<[RwLock<ConnectionStatus>]>) -> Self {
         let input_queues = Self::create_queues(&config);
         Self {
             saved_state: Default::default(),
-            local_connect_status: Default::default(),
+            local_connect_status,
             input_queues,
             config,
 
@@ -99,6 +98,10 @@ impl<State, Input: Default + Eq + Clone> RollbackSync<State, Input> {
             last_confirmed_frame: super::NULL_FRAME,
             frame_count: 0,
         }
+    }
+
+    pub fn player_count(&self) -> usize {
+        self.config.player_count
     }
 
     pub fn frame_count(&self) -> Frame {
@@ -130,11 +133,11 @@ impl<State, Input: Default + Eq + Clone> RollbackSync<State, Input> {
     pub fn add_local_input(
         &mut self,
         queue: usize,
-        mut input: GameInput<Input>,
-    ) -> Result<(), RollbackError> {
+        mut input: GameInput<T::Input>,
+    ) -> RollbackResult<Frame> {
         let frames_behind = self.frame_count - self.last_confirmed_frame;
-        if self.frame_count >= self.config.max_prediction_frames
-            && frames_behind >= self.config.max_prediction_frames
+        if self.frame_count >= MAX_PREDICTION_FRAMES as i32
+            && frames_behind >= MAX_PREDICTION_FRAMES as i32
         {
             warn!("Rejecting input from emulator: reached prediction barrier.");
             return Err(RollbackError::ReachedPredictionBarrier);
@@ -151,21 +154,18 @@ impl<State, Input: Default + Eq + Clone> RollbackSync<State, Input> {
         input.frame = self.frame_count;
         self.input_queues[queue].add_input(input);
 
-        Ok(())
+        Ok(self.frame_count)
     }
 
-    pub fn add_remote_input(&mut self, queue: usize, input: GameInput<Input>) {
+    pub fn add_remote_input(&mut self, queue: usize, input: GameInput<T::Input>) {
         self.input_queues[queue].add_input(input);
     }
 
-    pub fn get_confirmed_inputs(
-        &mut self,
-        frame: Frame,
-    ) -> Result<GameInput<Input>, DisconnectedError> {
+    pub fn get_confirmed_inputs(&mut self, frame: Frame) -> (GameInput<T::Input>, u32) {
         let mut disconnect_flags = 0;
-        let mut output: GameInput<Input> = Default::default();
-        for idx in 0..self.config.num_players {
-            let input = if self.is_disconnected(idx, frame) {
+        let mut output: GameInput<T::Input> = Default::default();
+        for idx in 0..self.config.player_count {
+            let input = if self.is_disconnected(idx) {
                 disconnect_flags |= 1 << idx;
                 Default::default()
             } else {
@@ -176,33 +176,22 @@ impl<State, Input: Default + Eq + Clone> RollbackSync<State, Input> {
             };
             output.inputs[idx] = input.inputs[0].clone();
         }
-
-        if disconnect_flags != 0 {
-            Err(DisconnectedError(disconnect_flags))
-        } else {
-            Ok(output)
-        }
+        (output, disconnect_flags)
     }
 
-    pub fn synchrohnize_inputs(
-        &mut self,
-        frame: Frame,
-    ) -> Result<GameInput<Input>, DisconnectedError> {
+    pub fn synchronize_inputs(&self) -> (GameInput<T::Input>, u32) {
         let mut disconnect_flags = 0;
-        let mut output: GameInput<Input> = Default::default();
-        for idx in 0..self.config.num_players {
-            if self.is_disconnected(idx, frame) {
+        let mut output: GameInput<T::Input> = Default::default();
+        for idx in 0..self.config.player_count {
+            if self.is_disconnected(idx) {
                 disconnect_flags |= 1 << idx;
-            } else if let Some(confirmed) = self.input_queues[idx].get_confirmed_input(frame) {
+            } else if let Some(confirmed) =
+                self.input_queues[idx].get_confirmed_input(self.frame_count())
+            {
                 output.inputs[idx] = confirmed.inputs[0].clone();
             }
         }
-
-        if disconnect_flags != 0 {
-            Err(DisconnectedError(disconnect_flags))
-        } else {
-            Ok(output)
-        }
+        (output, disconnect_flags)
     }
 
     pub fn check_simulation(&mut self, timeout: i32) {
@@ -221,7 +210,7 @@ impl<State, Input: Default + Eq + Clone> RollbackSync<State, Input> {
             .0
     }
 
-    pub fn get_last_saved_frame(&self) -> &SavedFrame<State> {
+    pub fn get_last_saved_frame(&self) -> &SavedFrame<T> {
         let mut idx = self.saved_state.head - 1;
         if idx < 0 {
             idx = self.saved_state.frames.len() - 1;
@@ -302,13 +291,15 @@ impl<State, Input: Default + Eq + Clone> RollbackSync<State, Input> {
         }
     }
 
-    fn is_disconnected(&self, player: usize, frame: Frame) -> bool {
-        let status = &self.local_connect_status[player];
-        status.disconnected && status.last_frame < frame
+    fn is_disconnected(&self, player: usize) -> bool {
+        let status = self.local_connect_status[player].read().unwrap();
+        status.disconnected && status.last_frame < self.frame_count()
     }
 
-    fn create_queues(config: &Config<Input>) -> Vec<InputQueue<Input>> {
-        (0..config.num_players).map(|_| InputQueue::new()).collect()
+    fn create_queues(config: &Config<T>) -> Vec<InputQueue<T>> {
+        (0..config.player_count)
+            .map(|_| InputQueue::new())
+            .collect()
     }
 }
 

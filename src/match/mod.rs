@@ -20,7 +20,6 @@ pub mod hitbox;
 pub mod input;
 pub mod physics;
 pub mod player;
-pub mod rollback;
 pub mod rule;
 pub mod stage;
 

@@ -1,4 +1,4 @@
-use super::{super::MAX_PLAYERS_PER_MATCH, Frame, MAX_ROLLBACK_FRAMES};
+use super::{super::MAX_PLAYERS_PER_MATCH, Frame, RollbackConfig, MAX_ROLLBACK_FRAMES};
 use bevy::log::info;
 use std::convert::TryFrom;
 
@@ -54,7 +54,10 @@ impl<T> FetchedInput<T> {
     }
 }
 
-pub struct InputQueue<T> {
+pub struct InputQueue<T>
+where
+    T: RollbackConfig,
+{
     head: usize,
     tail: usize,
     length: usize,
@@ -67,18 +70,18 @@ pub struct InputQueue<T> {
 
     frame_delay: Frame,
 
-    inputs: [GameInput<T>; MAX_ROLLBACK_FRAMES],
-    prediction: GameInput<T>,
+    inputs: [GameInput<T::Input>; MAX_ROLLBACK_FRAMES],
+    prediction: GameInput<T::Input>,
 }
 
-impl<T: Default + Eq + Clone> InputQueue<T> {
+impl<T: RollbackConfig> InputQueue<T> {
     pub fn new() -> Self {
         // This is necessary as Default is not defined on arrays of more
         // than 32 without a Copy trait bound.
         //
         // SAFE: The entire buffer is initialized by the end of the for-loop.
-        let inputs: [GameInput<T>; MAX_ROLLBACK_FRAMES] = {
-            let mut inputs: [GameInput<T>; MAX_ROLLBACK_FRAMES] =
+        let inputs: [GameInput<T::Input>; MAX_ROLLBACK_FRAMES] = {
+            let mut inputs: [GameInput<T::Input>; MAX_ROLLBACK_FRAMES] =
                 unsafe { std::mem::MaybeUninit::uninit().assume_init() };
 
             for idx in 0..MAX_ROLLBACK_FRAMES {
@@ -154,7 +157,7 @@ impl<T: Default + Eq + Clone> InputQueue<T> {
         self.last_frame_requested = super::NULL_FRAME;
     }
 
-    pub fn get_confirmed_input(&self, frame: Frame) -> Option<&GameInput<T>> {
+    pub fn get_confirmed_input(&self, frame: Frame) -> Option<&GameInput<T::Input>> {
         debug_assert!(
             super::is_null(self.first_incorrect_frame) || frame < self.first_incorrect_frame
         );
@@ -162,7 +165,7 @@ impl<T: Default + Eq + Clone> InputQueue<T> {
         self.inputs.get(offset)
     }
 
-    pub fn get_input(&mut self, frame: Frame) -> FetchedInput<T> {
+    pub fn get_input(&mut self, frame: Frame) -> FetchedInput<T::Input> {
         info!("requesting input frame {:?}.", frame);
 
         // No one should ever try to grab any input when we have a prediction
@@ -219,7 +222,7 @@ impl<T: Default + Eq + Clone> InputQueue<T> {
         FetchedInput::Prediction(prediction)
     }
 
-    pub fn add_input(&mut self, input: GameInput<T>) -> Frame {
+    pub fn add_input(&mut self, input: GameInput<T::Input>) -> Frame {
         // These next two lines simply verify that inputs are passed in
         // sequentially by the user, regardless of frame delay.
         debug_assert!(
@@ -241,7 +244,7 @@ impl<T: Default + Eq + Clone> InputQueue<T> {
         new_frame
     }
 
-    fn add_delayed_input(&mut self, frame: Frame, input: GameInput<T>) {
+    fn add_delayed_input(&mut self, frame: Frame, input: GameInput<T::Input>) {
         info!("adding delayed input frame number {} to queue.", frame);
         debug_assert!(super::is_null(self.last_added_frame) || frame == self.last_added_frame + 1);
         debug_assert!(frame == 0 || self.inputs[previous_frame(self.head)].frame == frame - 1);
