@@ -37,7 +37,7 @@ default-features = false
 features = ["bevy_winit", "render", "bevy_wgpu"]
 
 [dependencies.glam]
-version = "0.15"
+version = "0.16"
 features = ["libm"]
 
 [dev-dependencies]
