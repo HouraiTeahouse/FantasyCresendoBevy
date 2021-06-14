@@ -96,7 +96,7 @@ fn init_match(
     *result = MatchResult::from_config(&config);
 
     let mut state = MatchState {
-        time_remaining: config.time.clone(),
+        time_remaining: config.time,
         ..Default::default()
     };
     // TODO(jamessliu): This will not work for a new match from a menu.
@@ -147,10 +147,8 @@ fn init_match(
 
 fn cleanup_match(state: Res<MatchState>, mut commands: Commands) {
     // Despawn players
-    for player in state.players.iter() {
-        if let Some(entity) = player {
-            commands.entity(*entity).despawn_recursive();
-        }
+    for player in state.players.iter().flatten() {
+        commands.entity(*player).despawn_recursive();
     }
     commands.remove_resource::<MatchState>();
 }

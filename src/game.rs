@@ -1,3 +1,5 @@
+#[allow(clippy::float_cmp)]
+
 #[macro_use]
 extern crate bitflags;
 
@@ -48,7 +50,7 @@ fn main() {
     }
 
     {
-        let app_id = STEAM_APP_ID.clone().0.to_string();
+        let app_id = STEAM_APP_ID.0.to_string();
         std::env::set_var("SteamAppId", &app_id);
         std::env::set_var("SteamGameId", app_id);
     }
