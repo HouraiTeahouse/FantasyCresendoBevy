@@ -1,35 +1,58 @@
-name: CI
+name: Lint
 
-on:
-  pull_request:
-    branches: [main]
-  push:
-    branches: [main]
-
-env:
-  CARGO_TERM_COLOR: always
+on: [push, pull_request]
 
 jobs:
   build:
     strategy:
+      fail-fast: false
       matrix:
+        toolchain: [nightly]
         os: [windows-latest, ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout sources
+        uses: actions/checkout@v2
 
-      - uses: actions-rs/toolchain@v1
+      - name: Install nightly toolchain
+        id: toolchain
+        uses: actions-rs/toolchain@v1
         with:
-          toolchain: stable
+          toolchain: ${{ matrix.toolchain }}
           components: rustfmt, clippy
+          profile: minimal
           override: true
+
+      - name: Install LLVM and Clang
+        uses: KyleMayes/install-llvm-action@v1.3.0
+        if: runner.os != 'macOS'
+        with:
+          version: "12.0"
+          directory: ${{ runner.temp }}/llvm
 
       - name: Install alsa and udev
         run: sudo apt-get update; sudo apt-get install --no-install-recommends libasound2-dev libudev-dev
         if: runner.os == 'linux'
 
-      - name: Build & run tests
-        run: cargo test --workspace
-        env:
-          CARGO_INCREMENTAL: 0
-          RUSTFLAGS: "-C debuginfo=0 -D warnings"
+      - name: Setup cache
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-clippy-rustc-${{ steps.toolchain.outputs.rustc_hash }}-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Run clippy
+        uses: actions-rs/clippy-check@v1
+        if: runner.os == 'linux'
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          args: --workspace --tests
+
+      - name: Run cargo fmt
+        if: runner.os == 'linux'
+        run: cargo fmt --all -- --check
+
+      - name: Run cargo test
+        run: cargo test

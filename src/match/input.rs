@@ -295,14 +295,10 @@ impl<T: Copy + Eq + Hash> ButtonMapping<T> {
     }
 
     pub fn evaluate(&self, button: Buttons, input: &Input<T>) -> bool {
-        if let Some(buttons) = self.0.get(&button) {
-            for button in buttons.iter() {
-                if input.pressed(*button) {
-                    return true;
-                }
-            }
-        }
-        return false;
+        self.0
+            .get(&button)
+            .map(|buttons| buttons.iter().any(|button| input.pressed(*button)))
+            .unwrap_or(false)
     }
 }
 
