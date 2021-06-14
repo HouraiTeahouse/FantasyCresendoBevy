@@ -14,7 +14,6 @@ mod debug;
 mod geo;
 mod input;
 mod r#match;
-mod rollback;
 mod time;
 
 use r#match::*;
