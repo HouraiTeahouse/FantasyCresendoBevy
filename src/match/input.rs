@@ -4,6 +4,8 @@ use bevy::{
     math::{Vec2, Vec3},
     prelude::*,
 };
+use bevy_backroll::backroll::{GameInput, PlayerHandle};
+use bytemuck::{Pod, Zeroable};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::{
@@ -13,7 +15,8 @@ use std::{
 };
 
 bitflags! {
-    #[derive(Default, Serialize, Deserialize)]
+    #[repr(C)]
+    #[derive(Pod, Zeroable, Default, Serialize, Deserialize)]
     pub struct Buttons: u8 {
         const ATTACK = 1 << 0;
         const SPECIAL = 1 << 1;
@@ -92,7 +95,8 @@ impl Buttons {
     }
 }
 
-#[derive(Clone, Copy, Default, Eq, PartialEq)]
+#[repr(C)]
+#[derive(Pod, Zeroable, Clone, Copy, Default, Eq, PartialEq)]
 pub struct Axis1D(pub i8);
 
 impl Add<Axis1D> for Axis1D {
@@ -131,7 +135,8 @@ impl fmt::Debug for Axis1D {
     }
 }
 
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+#[repr(C)]
+#[derive(Pod, Zeroable, Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub struct Axis2D {
     pub x: Axis1D,
     pub y: Axis1D,
@@ -190,7 +195,8 @@ impl From<Vec2> for Axis2D {
     }
 }
 
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+#[repr(C)]
+#[derive(Pod, Zeroable, Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub struct PlayerInputFrame {
     pub movement: Axis2D,
     pub smash: Axis2D,
@@ -302,26 +308,12 @@ impl<T: Copy + Eq + Hash> ButtonMapping<T> {
     }
 }
 
-pub(super) fn sample_input(
-    keyboard: Res<Input<KeyCode>>,
-    mut players: Query<(&InputSource, &mut PlayerInput), With<Player>>,
+pub(super) fn inject_input(
+    input: Res<GameInput<PlayerInputFrame>>,
+    mut players: Query<(&PlayerHandle, &mut PlayerInput), With<Player>>,
 ) {
-    players.for_each_mut(|(mapping, mut player_input)| {
+    players.for_each_mut(|(handle, mut player_input)| {
         player_input.tick();
-        match mapping {
-            InputSource::None | InputSource::CPU => {}
-            InputSource::Keyboard {
-                movement,
-                smash,
-                buttons,
-            } => {
-                player_input.current = PlayerInputFrame {
-                    movement: movement.sample(&keyboard),
-                    smash: smash.sample(&keyboard),
-                    buttons: buttons.evaluate_all(&keyboard),
-                };
-            }
-            InputSource::Gamepad { .. } => {}
-        }
+        player_input.current = *input.get(*handle).unwrap();
     });
 }

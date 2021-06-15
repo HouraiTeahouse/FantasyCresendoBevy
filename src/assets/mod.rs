@@ -81,7 +81,7 @@ fn check_loading(
         .chain(metadata.stages.iter().map(|handle| handle.id));
     for id in ids {
         match asset_server.get_load_state(id) {
-            LoadState::NotLoaded => panic!("Assets failed to start loading"),
+            LoadState::NotLoaded | LoadState::Unloaded => panic!("Assets failed to start loading"),
             LoadState::Loaded | LoadState::Failed => continue,
             LoadState::Loading => return,
         }

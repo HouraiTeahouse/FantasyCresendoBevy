@@ -3,18 +3,21 @@ use crate::{
     character::{frame_data::*, state::*},
     geo::*,
     player::Player,
-    time::DELTA_TIME,
     AppState,
 };
+use bevy::prelude::State as BevyState;
 use bevy::{
-    core::FixedTimestep,
     math::*,
     prelude::*,
     render::camera::{Camera, PerspectiveProjection},
+    tasks::IoTaskPool,
     window::Windows,
 };
+use bevy_backroll::*;
 use serde::{Deserialize, Serialize};
+use std::ops::Deref;
 
+pub mod backroll;
 pub mod events;
 pub mod hitbox;
 pub mod input;
@@ -87,6 +90,7 @@ pub struct PlayerResult {}
 fn init_match(
     config: Res<MatchConfig>,
     spawn_points: Query<&SpawnPoint>,
+    task_pool: Res<IoTaskPool>,
     mut result: ResMut<MatchResult>,
     mut commands: Commands,
 ) {
@@ -103,6 +107,7 @@ fn init_match(
     // Systems need to be properly ordered to ensure that spawn points are added before players
     // are spawned.
     let mut spawn_points = spawn_points.iter();
+    let mut builder = backroll::P2PSession::build();
     for (id, player_config) in config.players.iter().enumerate() {
         state.players[id] = player_config.as_ref().map(|cfg| {
             info!("Spawning player {}", id);
@@ -112,6 +117,7 @@ fn init_match(
             let transform = Transform::from_translation(Vec3::from((spawn_point.position, 0.0)));
             let bundle = player::PlayerBundle {
                 player: Player { id: id as u8 },
+                handle: builder.add_player(cfg.player.clone()),
                 damage: config.rule.create_damage(&cfg),
                 body: physics::Body {
                     ecb: physics::EnvironmentCollisionBox(Bounds2D {
@@ -142,7 +148,9 @@ fn init_match(
             player::spawn_player(&mut commands, bundle)
         });
     }
+    let pool = task_pool.deref().deref().clone();
     commands.insert_resource(state);
+    commands.start_backroll_session(builder.start(pool).unwrap());
 }
 
 fn cleanup_match(state: Res<MatchState>, mut commands: Commands) {
@@ -221,8 +229,6 @@ fn update_camera(
 #[derive(Debug, Hash, PartialEq, Eq, Clone, StageLabel)]
 struct MatchUpdateStage;
 
-const MATCH_UPDATE_LABEL: &str = "MATCH_UPDATE";
-
 pub struct FcMatchPlugin;
 
 impl Plugin for FcMatchPlugin {
@@ -230,21 +236,16 @@ impl Plugin for FcMatchPlugin {
         builder
             .insert_resource(MatchConfig::default())
             .insert_resource(MatchResult::default())
+            .add_plugin(backroll::FcBackrollPlugin)
             .add_system_set(SystemSet::on_enter(AppState::MATCH).with_system(init_match.system()))
             .add_system_set(SystemSet::on_exit(AppState::MATCH).with_system(cleanup_match.system()))
             .add_system_set(
                 SystemSet::on_update(AppState::MATCH).with_system(update_camera.system()),
             )
-            .add_stage_after(
-                CoreStage::Update,
-                MatchUpdateStage,
-                // INVARIANT: SystemStage::single_threaded **must** follow system insertion order.
-                SystemStage::single_threaded()
-                    .with_run_criteria(
-                        FixedTimestep::step(DELTA_TIME.into()).with_label(MATCH_UPDATE_LABEL),
-                    )
+            .with_rollback_system_set::<backroll::BackrollConfig>(
+                SystemSet::new()
                     // Update inputs
-                    .with_system(input::sample_input.system().label("SAMPLE_INPUT"))
+                    .with_system(input::inject_input.system().label("SAMPLE_INPUT"))
                     // Run physics updates
                     .with_system(
                         physics::move_players
@@ -287,7 +288,7 @@ impl Plugin for FcMatchPlugin {
                     .with_system(
                         stage::kill_players
                             .system()
-                            .label("KILL PLAYERS")
+                            .label("KILL_PLAYERS")
                             .after("HIT_PLAYERS"),
                     )
                     // Evaluate the match state

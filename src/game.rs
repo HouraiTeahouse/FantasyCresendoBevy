@@ -6,6 +6,7 @@ extern crate bitflags;
 use crate::{player, r#match::input::*};
 #[windows_subsystem = "windows"]
 use bevy::prelude::*;
+use bevy_backroll::backroll;
 use bevy_steamworks::{AppId, SteamworksPlugin};
 use std::collections::HashMap;
 
@@ -49,18 +50,17 @@ fn main() {
         return;
     }
 
+    #[cfg(not(feature = "steam-restart"))]
     {
         let app_id = STEAM_APP_ID.0.to_string();
         std::env::set_var("SteamAppId", &app_id);
         std::env::set_var("SteamGameId", app_id);
     }
 
-    println!("{:?}", std::env::current_dir().unwrap());
-
     let mut app = App::build();
     app.insert_resource(WindowDescriptor {
         title: "Fantasy Crescendo".to_string(),
-        //vsync: true,
+        vsync: true,
         ..Default::default()
     })
     .add_state(AppState::STARTUP)
@@ -75,6 +75,7 @@ fn main() {
         time: None,
         players: [
             Some(player::PlayerConfig {
+                player: backroll::Player::Local,
                 character_id: 0,
                 pallete: 0,
                 default_damage: 0.0,
@@ -93,6 +94,7 @@ fn main() {
                 ),
             }),
             Some(player::PlayerConfig {
+                player: backroll::Player::Local,
                 character_id: 0,
                 pallete: 0,
                 default_damage: 0.0,

@@ -5,6 +5,7 @@ use super::{
 };
 use crate::character::{frame_data::*, state::*};
 use bevy::prelude::*;
+use bevy_backroll::backroll;
 use serde::{Deserialize, Serialize};
 
 const PLAYER_COLORS: &[Color] = &[Color::RED, Color::BLUE, Color::YELLOW, Color::GREEN];
@@ -18,6 +19,9 @@ pub struct Player {
 
 #[derive(Clone, Deserialize, Serialize)]
 pub struct PlayerConfig {
+    /// Whether the player is local or not.
+    #[serde(skip)]
+    pub player: backroll::Player,
     /// The player's selected character in a match.
     pub character_id: u32,
     /// The player's selected pallete.
@@ -176,9 +180,10 @@ impl PlayerDamage {
     }
 }
 
-#[derive(Bundle, Default)]
+#[derive(Bundle)]
 pub(super) struct PlayerBundle {
     pub player: Player,
+    pub handle: backroll::PlayerHandle,
     pub transform: Transform,
     pub global_transform: GlobalTransform,
     pub body: physics::Body,
@@ -190,6 +195,23 @@ pub(super) struct PlayerBundle {
     pub character: CharacterBundle,
     // #[bundle]
     // pub pbr: PbrBundle,
+}
+
+impl Default for PlayerBundle {
+    fn default() -> Self {
+        Self {
+            player: Default::default(),
+            handle: backroll::PlayerHandle(0),
+            transform: Default::default(),
+            global_transform: Default::default(),
+            body: Default::default(),
+            movement: Default::default(),
+            input: Default::default(),
+            damage: Default::default(),
+            input_source: Default::default(),
+            character: Default::default(),
+        }
+    }
 }
 
 #[derive(Bundle, Default)]
