@@ -4,12 +4,12 @@
 extern crate bitflags;
 
 use crate::{player, r#match::input::*};
+use backroll_transport_udp::*;
 #[windows_subsystem = "windows"]
 use bevy::prelude::*;
-use bevy_backroll::backroll;
-use backroll_transport_udp::*;
-use bevy_steamworks::{AppId, SteamworksPlugin};
 use bevy::tasks::IoTaskPool;
+use bevy_backroll::backroll;
+use bevy_steamworks::{AppId, SteamworksPlugin};
 use std::collections::HashMap;
 use std::net::SocketAddr;
 use std::ops::Deref;
@@ -139,10 +139,7 @@ fn events(mut events: EventReader<backroll::Event>) {
 }
 
 /// set up a simple 3D scene
-fn setup(
-    config: Res<StartupConfig>, 
-    pool: Res<IoTaskPool>,
-    mut commands: Commands) {
+fn setup(config: Res<StartupConfig>, pool: Res<IoTaskPool>, mut commands: Commands) {
     // cameras
     commands.spawn_bundle(UiCameraBundle::default());
     commands.spawn_bundle(PerspectiveCameraBundle {
