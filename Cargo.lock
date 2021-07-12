@@ -223,8 +223,8 @@ checksum = "cdb031dd78e28731d87d56cc8ffef4a8f36ca26c38fe2de700543e627f8a464a"
 
 [[package]]
 name = "backroll"
-version = "0.1.0"
-source = "git+https://github.com/HouraiTeahouse/backroll-rs?branch=main#77d3b6b8991aa4e6502309c97802309ba4a3f30b"
+version = "0.2.0"
+source = "git+https://github.com/HouraiTeahouse/backroll-rs?branch=main#9580027d3aca32eec13e419b240d94697d98a6fc"
 dependencies = [
  "async-channel",
  "backroll_transport",
@@ -244,8 +244,8 @@ dependencies = [
 
 [[package]]
 name = "backroll_transport"
-version = "0.1.1"
-source = "git+https://github.com/HouraiTeahouse/backroll-rs?branch=main#77d3b6b8991aa4e6502309c97802309ba4a3f30b"
+version = "0.1.2"
+source = "git+https://github.com/HouraiTeahouse/backroll-rs?branch=main#9580027d3aca32eec13e419b240d94697d98a6fc"
 dependencies = [
  "async-channel",
  "dashmap",
@@ -254,7 +254,7 @@ dependencies = [
 [[package]]
 name = "backroll_transport_steam"
 version = "0.1.0"
-source = "git+https://github.com/HouraiTeahouse/backroll-rs?branch=main#77d3b6b8991aa4e6502309c97802309ba4a3f30b"
+source = "git+https://github.com/HouraiTeahouse/backroll-rs?branch=main#9580027d3aca32eec13e419b240d94697d98a6fc"
 dependencies = [
  "async-channel",
  "backroll_transport",
@@ -266,7 +266,7 @@ dependencies = [
 [[package]]
 name = "backroll_transport_udp"
 version = "0.1.0"
-source = "git+https://github.com/HouraiTeahouse/backroll-rs?branch=main#77d3b6b8991aa4e6502309c97802309ba4a3f30b"
+source = "git+https://github.com/HouraiTeahouse/backroll-rs?branch=main#9580027d3aca32eec13e419b240d94697d98a6fc"
 dependencies = [
  "async-channel",
  "async-net",
@@ -352,7 +352,7 @@ dependencies = [
 [[package]]
 name = "bevy_backroll"
 version = "0.1.0"
-source = "git+https://github.com/HouraiTeahouse/backroll-rs?branch=main#77d3b6b8991aa4e6502309c97802309ba4a3f30b"
+source = "git+https://github.com/HouraiTeahouse/backroll-rs?branch=main#9580027d3aca32eec13e419b240d94697d98a6fc"
 dependencies = [
  "backroll",
  "backroll_transport_steam",
