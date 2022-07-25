@@ -24,7 +24,7 @@ jobs:
           override: true
 
       - name: Install LLVM and Clang
-        uses: KyleMayes/install-llvm-action@v1.4.1
+        uses: KyleMayes/install-llvm-action@v1.5.4
         if: runner.os != 'macOS'
         with:
           version: "12.0"
